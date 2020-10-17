@@ -1,10 +1,8 @@
 #!/bin/bash
 
 ### TO DO:
-# - Verify subdiag call. If people dont use ssdownloader, they may not have 2 levels of folders for the diag
 # - If solr, may need extra param for it to add extra sperf output
 # - Test vs OSS diag collector
-# - Create an archive of the parsed data for reference that can be uploaded to ZD?
 
 template=$(dirname "${BASH_SOURCE[0]}")
 
@@ -90,7 +88,7 @@ for i in $(ls "$opscdiag"/Nibbler)
 do
   linkname
 	# printf '<a href="%s/Nibbler/%s" target = "center">%s</a><br>\n' "$opscdiag" $i $link >> "$opscdiag"/wrapper/left_frame.htm
-  printf '<a href="../Nibbler/%s" target = "center">%s</a><br>\n' $i $link >> "$opscdiag"/wrapper/left_frame.htm
+  printf '\t\t\t<a href="../Nibbler/%s" target = "center">%s</a><br>\n' $i $link >> "$opscdiag"/wrapper/left_frame.htm
 done
 }
 
@@ -106,7 +104,7 @@ do
   # echo $i
   linkname
 	# printf '<a href="%s/wrapper/%s" target = "center">%s</a><br>\n' "$opscdiag" $i $link >> "$opscdiag"/wrapper/left_frame.htm
-  printf '<a href="./%s" target = "center">%s</a><br>\n' $i $link >> "$opscdiag"/wrapper/left_frame.htm
+  printf '\t\t\t<a href="./%s" target = "center">%s</a><br>\n' $i $link >> "$opscdiag"/wrapper/left_frame.htm
 done
 }
 
@@ -123,8 +121,20 @@ tarball(){
    tar -czf "$opscdiag"_parsed.tgz Nibbler wrapper
 }
 
+openexist() {
+  echo "No need to run me, the tool was previously executed,"
+  echo "Opening the existing file. If you want to reprocess, delete the folder "$opscdiag"$1/wrapper"
+  echo "let's save the planet some CPU cycles"
+  $browser --new-window "file:///$opscdiag$1/wrapper/index.html"
+}
+
+openfail() {
+  echo "Found the "$opscdiag"$1/wrapper folder but no index.html"
+  echo "Delete the folder "$opscdiag"$1/wrapper and run me again"
+}
+
 ### Execution
-# make sure I am in the right place first or abort all
+# make sure I am in a diag folder first or abort all
 if [[ -d $(find "$opscdiag" -mindepth 2 -maxdepth 2 -name 'nodes' -type d) ]]; then
   # Expected path above the diag. Get the diag path for sperf
   subdiag="$(find "$opscdiag" -maxdepth 1 -name '*-diagnostics-*' -type d | head -1)"
@@ -140,30 +150,36 @@ else
   exit 1
 fi
 
+# Open existing report or process the request
 pushd "$opscdiag" > /dev/null
+# File was processed locally
 if [[ -d "$opscdiag"/wrapper ]]; then
-  echo
-  echo "Hey Ho Fellow Supportineer!"
-  echo "No need to run me, the tool has previously executed,"
-  echo "let's save the planet some CPU cycles"
-  echo
-  echo "If you need to rerun the wrapper, delete "$opscdiag"/wrapper"
-  echo "Or launch $browser --new-window \"file:///$opscdiag/wrapper/index.html\""
-  echo
-# As Im tarballing the diag, if it gets push to ZD, I could potentially use that instead of processing.
-# Currently in the wrong directory (I probably need to pushd)
-# Fact is my path is totally wrong here. TO DO
-elif [[ -f "$opscdiag"/../"$opscdiag"_parsed.tgz ]]; then
-  echo "I found a parsed version of this diag on here:"
-  echo ""$opscdiag"/../"$opscdiag"_parsed.tgz"
-  echo "You may want to use that instead or remove it if you want to parse again"
-  # echo "Let me unzip it for you"
-  # pushd "$opscdiag"/.. > /dev/null
-  # tar zxf
+  # Skip processing if we can
+  if [[ -f "$opscdiag"/wrapper/index.html ]]; then
+    openexist
+  else
+    openfail
+  fi
+# As Im tarballing the diag processed, if it gets push to ZD, I could potentially use that instead of processing.
+# File was processed and sent to ZD by a fellow supportineer and was brought by ssdownloader.
+# This will require more testing
+elif [[ -d "$opscdiag"_parsed ]]; then
+  if [[ -f "$opscdiag"_parsed/wrapper/index.html ]]; then
+    openexist _parsed
+  else
+    openfail _parsed
+  fi
+elif [[ -f "$opscdiag"_parsed.tgz ]]; then
+    # The tgz exists but wasnt uncompressed
+    echo "Found parsed archive: "$opscdiag"_parsed.tgz"
+    echo "Uncompressing existing parsed diag and opening it"
+    echo "Will open "file:///"$opscdiag"/wrapper/index.html""
+    tar zxf "$opscdiag"_parsed.tgz
+    $browser --new-window "file:///$opscdiag/wrapper/index.html"
 else
   prep
   nibblerrun
-  # sperfrun
+  sperfrun
   header
   nibblerpop
   sperfpop
