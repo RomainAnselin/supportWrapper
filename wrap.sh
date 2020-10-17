@@ -3,6 +3,7 @@
 ### TO DO:
 # - If solr, may need extra param for it to add extra sperf output
 # - Test vs OSS diag collector
+# - What if there are multiple diags under the same folder?
 
 template=$(dirname "${BASH_SOURCE[0]}")
 
@@ -137,6 +138,11 @@ openfail() {
 }
 
 ### Execution
+# Is there multiple diags in there? That may be a problem
+if [ $(find "$opscdiag" -maxdepth 1 -name '*-diagnostics-*' -type d | wc -l) -ge 2 ]; then
+  echo "Found more than one diagnostic folder in here. Please specify the exact diag. Exiting..."
+  exit 1
+fi
 # make sure I am in a diag folder first or abort all
 if [[ -d $(find "$opscdiag" -mindepth 2 -maxdepth 2 -name 'nodes' -type d) ]]; then
   # Expected path above the diag. Get the diag path for sperf
