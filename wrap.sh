@@ -3,8 +3,8 @@
 ### TO DO:
 # - Verify subdiag call. If people dont use ssdownloader, they may not have 2 levels of folders for the diag
 # - If solr, may need extra param for it to add extra sperf output
-# - push to git
 # - Test vs OSS diag collector
+# - Create an archive of the parsed data for reference that can be uploaded to ZD?
 
 template=$(dirname "${BASH_SOURCE[0]}")
 
@@ -52,13 +52,6 @@ echo "Nibbler running"
 $javapath -jar $nibblerpath "$opscdiag"
 }
 
-getdiagname() {
-# The tool runs in the top diag directory. However, sperf requires the actual diag folder
-# !!! need to double check that brings a valid result !!!
-  subdiag="$(find "$opscdiag" -maxdepth 1 -name '*-diagnostics-*' -type d | head -1)"
-  #echo $subdiag
-}
-
 sperfrun() {
 echo "Sperf summary"
 $pythonpath $sperf -x -d "$subdiag" > "$opscdiag"/wrapper/sperfgeneral.txt
@@ -96,7 +89,8 @@ EOF
 for i in $(ls "$opscdiag"/Nibbler)
 do
   linkname
-	printf '<a href="%s/Nibbler/%s" target = "center">%s</a><br>\n' "$opscdiag" $i $link >> "$opscdiag"/wrapper/left_frame.htm
+	# printf '<a href="%s/Nibbler/%s" target = "center">%s</a><br>\n' "$opscdiag" $i $link >> "$opscdiag"/wrapper/left_frame.htm
+  printf '<a href="../Nibbler/%s" target = "center">%s</a><br>\n' $i $link >> "$opscdiag"/wrapper/left_frame.htm
 done
 }
 
@@ -111,7 +105,8 @@ for i in $(ls -tr "$opscdiag"/wrapper | grep sperf*)
 do
   # echo $i
   linkname
-	printf '<a href="%s/wrapper/%s" target = "center">%s</a><br>\n' "$opscdiag" $i $link >> "$opscdiag"/wrapper/left_frame.htm
+	# printf '<a href="%s/wrapper/%s" target = "center">%s</a><br>\n' "$opscdiag" $i $link >> "$opscdiag"/wrapper/left_frame.htm
+  printf '<a href="./%s" target = "center">%s</a><br>\n' $i $link >> "$opscdiag"/wrapper/left_frame.htm
 done
 }
 
@@ -123,14 +118,18 @@ cat >> "$opscdiag"/wrapper/left_frame.htm << EOF
 EOF
 }
 
+tarball(){
+   echo "Compressing the data under "$opscdiag"_parsed.tgz"
+   tar -czf "$opscdiag"_parsed.tgz Nibbler wrapper
+}
+
 ### Execution
 # make sure I am in the right place first or abort all
 if [[ -d $(find "$opscdiag" -mindepth 2 -maxdepth 2 -name 'nodes' -type d) ]]; then
   # Expected path above the diag. Get the diag path for sperf
-  #subdiag="$(find "$opscdiag" -maxdepth 1 -name '*-diagnostics-*' -type d | head -1)"
   subdiag="$(find "$opscdiag" -maxdepth 1 -name '*-diagnostics-*' -type d | head -1)"
   if [[ -z "$subdiag" ]]; then
-    echo "Cannot find the diagnostic folder. Exiting..."
+    echo "Cannot find the diagnostics folder. Exiting..."
     exit 1
   fi
 elif [[ -d $(find "$opscdiag" -mindepth 1 -maxdepth 1 -name 'nodes' -type d) ]]; then
@@ -141,21 +140,35 @@ else
   exit 1
 fi
 
+pushd "$opscdiag" > /dev/null
 if [[ -d "$opscdiag"/wrapper ]]; then
-  echo "No need to run, the tool has previously executed,"
-  echo "let's save the planet some CPU consumption"
+  echo
+  echo "Hey Ho Fellow Supportineer!"
+  echo "No need to run me, the tool has previously executed,"
+  echo "let's save the planet some CPU cycles"
+  echo
   echo "If you need to rerun the wrapper, delete "$opscdiag"/wrapper"
-  # echo "Run $browser --new-window \"file:///$opscdiag/wrapper/index.html\""
+  echo "Or launch $browser --new-window \"file:///$opscdiag/wrapper/index.html\""
+  echo
+# As Im tarballing the diag, if it gets push to ZD, I could potentially use that instead of processing.
+# Currently in the wrong directory (I probably need to pushd)
+# Fact is my path is totally wrong here. TO DO
+elif [[ -f "$opscdiag"/../"$opscdiag"_parsed.tgz ]]; then
+  echo "I found a parsed version of this diag on here:"
+  echo ""$opscdiag"/../"$opscdiag"_parsed.tgz"
+  echo "You may want to use that instead or remove it if you want to parse again"
+  # echo "Let me unzip it for you"
+  # pushd "$opscdiag"/.. > /dev/null
+  # tar zxf
 else
-  pushd "$opscdiag" > /dev/null
   prep
   nibblerrun
-  sperfrun
+  # sperfrun
   header
   nibblerpop
   sperfpop
   footer
-  popd > /dev/null
+  tarball
+  $browser --new-window "file:///$opscdiag/wrapper/index.html"
 fi
-
-$browser --new-window "file:///$opscdiag/wrapper/index.html"
+popd > /dev/null
