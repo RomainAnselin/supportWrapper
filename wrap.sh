@@ -11,7 +11,10 @@ if [ $# -ne 1 ]; then
     exit 1
 fi
 
-opscdiag="$1"
+if [[ "$1" == "." ]]; then opscdiag="$(pwd)"
+else opscdiag="$1"
+fi
+
 browser=firefox
 javapath=/usr/lib/jvm/liberica-jdk8u265-full/jre/bin/java
 nibblerpath=~/tools/Nibbler.jar
@@ -160,8 +163,7 @@ if [[ -d "$opscdiag"/wrapper ]]; then
   else
     openfail
   fi
-# As Im tarballing the diag processed, if it gets push to ZD, I could potentially use that instead of processing.
-# File was processed and sent to ZD by a fellow supportineer and was brought by ssdownloader.
+# If parsed diag was processed and sent to ZD by a fellow supportineer and brought back by ssdownloader.
 # This will require more testing
 elif [[ -d "$opscdiag"_parsed ]]; then
   if [[ -f "$opscdiag"_parsed/wrapper/index.html ]]; then
