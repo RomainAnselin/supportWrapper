@@ -14,7 +14,7 @@ pythonpath=/home/romain/dev/virtualenvs/py3/bin/python
 sperf=~/tools/sperf/scripts/sperf
 ```
 
-Create an alias from supportWrapper. ie: `alias swrap='~/supportWrapper/wrap.sh'``
+Create an alias from supportWrapper. ie: `alias swrap='~/supportWrapper/wrap.sh'`
 Run `swrap <path to opsc diag>`
 
 The script can be executed from one or two levels above the nodes folder of the diag. As I use ssdownloader, I prefer to use the "top" level of the diag, but both can be used.
