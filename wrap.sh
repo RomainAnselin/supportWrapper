@@ -20,7 +20,7 @@ browser=firefox
 javapath=/usr/lib/jvm/liberica-jdk8u265-full/jre/bin/java
 nibblerpath=~/tools/Nibbler.jar
 pythonpath=/home/romain/dev/virtualenvs/py3/bin/python
-sperf=~/tools/sperf/scripts/sperf
+sperfpath=~/tools/sperf/scripts/sperf
 # Consider implementing a GC viewer tool maybe
 
 prep() {
@@ -54,17 +54,28 @@ echo "Nibbler running"
 $javapath -jar $nibblerpath "$opscdiag"
 }
 
+sperfcheck() {
+# sperf come in 2 different format. Need to identify to run accordingly
+if [[ $(file $sperfpath | sed -E 's/.*: ([A-Za-z]+) .*/\1/g') == 'ELF' ]]; then pyornotpy=
+elif [[ $(file $sperfpath | sed -E 's/.*: ([A-Za-z]+) .*/\1/g') == 'Python' ]]; then pyornotpy=$pythonpath
+else
+  echo "Sorry but I do not recognize sperf as binary or python. Skipping sperf"
+  sperffail=1
+fi
+}
+
 sperfrun() {
+sperfcheck
 echo "Sperf summary"
-$pythonpath $sperf -x -d "$subdiag" > "$opscdiag"/wrapper/sperfgeneral.txt
+$pyornotpy $sperfpath -x -d "$subdiag" > "$opscdiag"/wrapper/sperfgeneral.txt
 echo "Sperf GC analysis"
-$pythonpath $sperf -x -d "$subdiag" core gc > "$opscdiag"/wrapper/sperfgc.txt
+$pyornotpy $sperfpath -x -d "$subdiag" core gc > "$opscdiag"/wrapper/sperfgc.txt
 echo "Sperf StatusLogger"
-$pythonpath $sperf -x -d "$subdiag" core statuslogger > "$opscdiag"/wrapper/sperfstatuslog.txt
+$pyornotpy $sperfpath -x -d "$subdiag" core statuslogger > "$opscdiag"/wrapper/sperfstatuslog.txt
 echo "Sperf Slow Query"
-$pythonpath $sperf -x core slowquery -d "$subdiag" > "$opscdiag"/wrapper/sperfslow.txt
+$pyornotpy $sperfpath -x core slowquery -d "$subdiag" > "$opscdiag"/wrapper/sperfslow.txt
 echo "Sperf Schema"
-$pythonpath $sperf -x core schema -d "$subdiag" > "$opscdiag"/wrapper/sperfschema.txt
+$pyornotpy $sperfpath -x core schema -d "$subdiag" > "$opscdiag"/wrapper/sperfschema.txt
 }
 
 # Time to build the content

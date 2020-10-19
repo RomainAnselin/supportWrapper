@@ -10,8 +10,8 @@ Also define your favorite web browser (firefox or chrome)
 browser=firefox
 javapath=/usr/lib/jvm/liberica-jdk8u265-full/jre/bin/java
 nibblerpath=~/tools/Nibbler.jar
-pythonpath=/home/romain/dev/virtualenvs/py3/bin/python
-sperf=~/tools/sperf/scripts/sperf
+pythonpath=~/dev/virtualenvs/py3/bin/python
+sperfpath=~/tools/sperf/scripts/sperf
 ```
 
 Create an alias from supportWrapper. ie: `alias swrap='~/supportWrapper/wrap.sh'`
