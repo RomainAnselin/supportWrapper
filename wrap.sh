@@ -161,22 +161,13 @@ fi
 
 # Open existing report or process the request
 pushd "$opscdiag" > /dev/null
-# File was processed locally
-if [[ -d "$opscdiag"/wrapper ]]; then
-  # Skip processing if we can
-  if [[ -f "$opscdiag"/wrapper/index.html ]]; then
+# File was already processed locally
+if [[ -f "$opscdiag"/wrapper/index.html ]]; then
     openexist
-  else
-    openfail
-  fi
 # If parsed diag was processed and sent to ZD by a fellow supportineer and brought back by ssdownloader.
 # This will require more testing
-elif [[ -d "$opscdiag"_parsed ]]; then
-  if [[ -f "$opscdiag"_parsed/wrapper/index.html ]]; then
+elif [[ -f "$opscdiag"_parsed/wrapper/index.html ]]; then
     openexist _parsed
-  else
-    openfail _parsed
-  fi
 elif [[ -f "$opscdiag"_parsed.tgz ]]; then
     # The tgz exists but wasnt uncompressed
     echo "Found parsed archive: "$opscdiag"_parsed.tgz"
@@ -192,7 +183,8 @@ else
   nibblerpop
   sperfpop
   footer
-  tarball
+  # need to revisit tarball generation. Too many issues at the moment
+  # tarball
   $browser --new-window "file:///$opscdiag/wrapper/index.html"
 fi
 popd > /dev/null
