@@ -9,6 +9,7 @@ Also define your favorite web browser (firefox or chrome)
 ```
 # WARNING: If your path contains spaces/brackets, put the variable in double quotes.
 # ie: nibblerpath="/mnt/c/Users/My User/Nibbler.jar"
+# browser="/mnt/c/Program\ Files\ \(x86\)/Internet\ Explorer/iexplore.exe"
 browser=firefox
 javapath=/usr/lib/jvm/liberica-jdk8u265-full/jre/bin/java
 nibblerpath=~/tools/Nibbler.jar
