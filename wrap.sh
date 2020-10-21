@@ -1,9 +1,10 @@
 #!/bin/bash
 
 ### TO DO:
-# - If solr, may need extra param for it to add extra sperf output
+# - For sperf solr, add an input parameter
 # - Test vs OSS diag collector
 # - What if there are multiple diags under the same folder?
+# - Opening the web browser from WSL is challenging at best. Need to detect windows and output file location for windows without executing the browser
 
 template=$(dirname "${BASH_SOURCE[0]}")
 
@@ -16,17 +17,19 @@ if [[ "$1" == "." ]]; then opscdiag="$(pwd)"
 else opscdiag="$1"
 fi
 
+# WARNING: If your path contains spaces/brackets, put the variable in double quotes.
+# ie: nibblerpath="/mnt/c/Users/My User/Nibbler.jar"
 browser=firefox
 javapath=/usr/lib/jvm/liberica-jdk8u265-full/jre/bin/java
 nibblerpath=~/tools/Nibbler.jar
-pythonpath=/home/romain/dev/virtualenvs/py3/bin/python
+pythonpath=~/dev/virtualenvs/py3/bin/python
 sperfpath=~/tools/sperf/scripts/sperf
 # Consider implementing a GC viewer tool maybe
 
 prep() {
   mkdir "$opscdiag"/wrapper
-  cp $template/index.html "$opscdiag"/wrapper/index.html
-  cp $template/datastax.png "$opscdiag"/wrapper/datastax.png
+  cp "$template"/index.html "$opscdiag"/wrapper/index.html
+  cp "$template"/datastax.png "$opscdiag"/wrapper/datastax.png
 }
 
 linkname() {
@@ -51,13 +54,13 @@ fi
 # Run tools
 nibblerrun() {
 echo "Nibbler running"
-$javapath -jar $nibblerpath "$opscdiag"
+"$javapath" -jar "$nibblerpath" "$opscdiag"
 }
 
 sperfcheck() {
 # sperf come in 2 different format. Need to identify to run accordingly
-if [[ $(file $sperfpath | sed -E 's/.*: ([A-Za-z]+) .*/\1/g') == 'ELF' ]]; then pyornotpy=
-elif [[ $(file $sperfpath | sed -E 's/.*: ([A-Za-z]+) .*/\1/g') == 'Python' ]]; then pyornotpy=$pythonpath
+if [[ $(file "$sperfpath" | sed -E 's/.*: ([A-Za-z]+) .*/\1/g') == 'ELF' ]]; then pyornotpy=
+elif [[ $(file "$sperfpath" | sed -E 's/.*: ([A-Za-z]+) .*/\1/g') == 'Python' ]]; then pyornotpy="$pythonpath"
 else
   echo "Sorry but I do not recognize sperf as binary or python. Skipping sperf"
   sperffail=1
@@ -67,15 +70,15 @@ fi
 sperfrun() {
 sperfcheck
 echo "Sperf summary"
-$pyornotpy $sperfpath -x -d "$subdiag" > "$opscdiag"/wrapper/sperfgeneral.txt
+"$pyornotpy" "$sperfpath" -x -d "$subdiag" > "$opscdiag"/wrapper/sperfgeneral.txt
 echo "Sperf GC analysis"
-$pyornotpy $sperfpath -x -d "$subdiag" core gc > "$opscdiag"/wrapper/sperfgc.txt
+"$pyornotpy" "$sperfpath" -x -d "$subdiag" core gc > "$opscdiag"/wrapper/sperfgc.txt
 echo "Sperf StatusLogger"
-$pyornotpy $sperfpath -x -d "$subdiag" core statuslogger > "$opscdiag"/wrapper/sperfstatuslog.txt
+"$pyornotpy" "$sperfpath" -x -d "$subdiag" core statuslogger > "$opscdiag"/wrapper/sperfstatuslog.txt
 echo "Sperf Slow Query"
-$pyornotpy $sperfpath -x core slowquery -d "$subdiag" > "$opscdiag"/wrapper/sperfslow.txt
+"$pyornotpy" "$sperfpath" -x core slowquery -d "$subdiag" > "$opscdiag"/wrapper/sperfslow.txt
 echo "Sperf Schema"
-$pyornotpy $sperfpath -x core schema -d "$subdiag" > "$opscdiag"/wrapper/sperfschema.txt
+"$pyornotpy" "$sperfpath" -x core schema -d "$subdiag" > "$opscdiag"/wrapper/sperfschema.txt
 }
 
 # Time to build the content
