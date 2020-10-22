@@ -145,7 +145,7 @@ browseropen() {
   echo "Opening browser"
   if [[ "$(sed 's/.*microsoft.*/win/gi' /proc/version)" == "win" ]]; then opscdiag="$(wslpath -m "$opscdiag")"
   fi
-  $browser --new-window "file:///"$opscdiag"$1/wrapper/index.html"
+  $browser --new-window "file:///$opscdiag$1/wrapper/index.html"
 }
 
 ### Execution
