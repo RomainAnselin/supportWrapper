@@ -3,9 +3,10 @@
 ### TO DO:
 # - For sperf solr, add an input parameter
 # - Test vs OSS diag collector
-# - What if there are multiple diags under the same folder?
-# - Opening the web browser from WSL is challenging at best. Need to detect windows and output file location for windows without executing the browser
+# - Opening the web browser from WSL is challenging at best. Need to detect windows and output file location for windows without executing the browser (in progress)
+# - Implement debug
 
+debug=0
 template=$(dirname "${BASH_SOURCE[0]}")
 
 if [ $# -ne 1 ]; then
@@ -140,16 +141,11 @@ tarball(){
    tar -czf "$opscdiag"_parsed.tgz Nibbler wrapper
 }
 
-openexist() {
-  echo "No need to run me, the tool was previously executed,"
-  echo "Opening the existing file. If you want to reprocess, delete the folder "$opscdiag"$1/wrapper"
-  echo "let's save the planet some CPU cycles"
-  $browser --new-window "file:///$opscdiag$1/wrapper/index.html"
-}
-
-openfail() {
-  echo "Found the "$opscdiag"$1/wrapper folder but no index.html"
-  echo "Delete the folder "$opscdiag"$1/wrapper and run me again"
+browseropen() {
+  echo "Opening browser"
+  if [[ "$(sed 's/.*microsoft.*/win/gi' /proc/version)" == "win" ]]; then opscdiag="$(wslpath -m "$opscdiag")"
+  fi
+  $browser --new-window "file:///"$opscdiag"$1/wrapper/index.html"
 }
 
 ### Execution
@@ -157,9 +153,8 @@ openfail() {
 if [ $(find "$opscdiag" -maxdepth 1 -name '*-diagnostics-*' -type d | wc -l) -ge 2 ]; then
   echo "Found more than one diagnostic folder in here. Please specify the exact diag. Exiting..."
   exit 1
-fi
 # make sure I am in a diag folder first or abort all
-if [[ -d $(find "$opscdiag" -mindepth 2 -maxdepth 2 -name 'nodes' -type d) ]]; then
+elif [[ -d $(find "$opscdiag" -mindepth 2 -maxdepth 2 -name 'nodes' -type d) ]]; then
   # Expected path above the diag. Get the diag path for sperf
   subdiag="$(find "$opscdiag" -maxdepth 1 -name '*-diagnostics-*' -type d | head -1)"
   if [[ -z "$subdiag" ]]; then
@@ -178,18 +173,21 @@ fi
 pushd "$opscdiag" > /dev/null
 # File was already processed locally
 if [[ -f "$opscdiag"/wrapper/index.html ]]; then
-    openexist
+    if [[ $debug == 1 ]]; then break; fi
+    browseropen
 # If parsed diag was processed and sent to ZD by a fellow supportineer and brought back by ssdownloader.
 # This will require more testing
 elif [[ -f "$opscdiag"_parsed/wrapper/index.html ]]; then
-    openexist _parsed
+  if [[ $debug == 1 ]]; then break; fi
+  browseropen _parsed
 elif [[ -f "$opscdiag"_parsed.tgz ]]; then
-    # The tgz exists but wasnt uncompressed
-    echo "Found parsed archive: "$opscdiag"_parsed.tgz"
-    echo "Uncompressing existing parsed diag and opening it"
-    echo "Will open "file:///"$opscdiag"/wrapper/index.html""
-    tar zxf "$opscdiag"_parsed.tgz
-    $browser --new-window "file:///$opscdiag/wrapper/index.html"
+  # The tgz exists but wasnt uncompressed
+  if [[ $debug == 1 ]]; then break; fi
+  echo "Found parsed archive: "$opscdiag"_parsed.tgz"
+  echo "Uncompressing existing parsed diag and opening it"
+  echo "Will open "file:///"$opscdiag"/wrapper/index.html""
+  tar zxf "$opscdiag"_parsed.tgz
+  browseropen
 else
   prep
   nibblerrun
@@ -200,6 +198,6 @@ else
   footer
   # need to revisit tarball generation. Too many issues at the moment
   # tarball
-  $browser --new-window "file:///$opscdiag/wrapper/index.html"
+  browseropen
 fi
 popd > /dev/null
