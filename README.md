@@ -1,5 +1,15 @@
 Getting started
 
+Known issues:
+- sperf will fail to run on version 0.5.x - please update to a more recent version (tested against 0.6.5 and 0.6.6)
+
+For beta/debugging:
+- while still implementing and making sure it can run on WSL, Mac and Linux seemlessly, in case of issue, please
+1. `rm -r <path to diag>/wrapper`
+2. switch `debug=1` in `wrap.sh`
+If more info is required:
+`bash -xv <path>/wrap.sh <path to diag>`
+
 Prerequisites:
 In `wrap.sh`, change the following variables to fit your environment.
 All of them are self explanatory.
@@ -9,7 +19,7 @@ Also define your favorite web browser (firefox or chrome)
 ```
 # WARNING: If your path contains spaces/brackets, put the variable in double quotes.
 # ie: nibblerpath="/mnt/c/Users/My User/Nibbler.jar"
-# browser="/mnt/c/Program\ Files\ \(x86\)/Internet\ Explorer/iexplore.exe"
+# browser="/mnt/c/Program Files (x86)/Internet Explorer/iexplore.exe"
 browser=firefox
 javapath=/usr/lib/jvm/liberica-jdk8u265-full/jre/bin/java
 nibblerpath=~/tools/Nibbler.jar
@@ -17,7 +27,10 @@ pythonpath=~/dev/virtualenvs/py3/bin/python
 sperfpath=~/tools/sperf/scripts/sperf
 ```
 
-Create an alias from supportWrapper. ie: `alias swrap='~/supportWrapper/wrap.sh'`
+1- Validate functionality of the tool without alias:
+`<path>/wrap.sh <path to diag>`
+
+Create an alias for supportWrapper. ie: `alias swrap='~/supportWrapper/wrap.sh'`
 Run `swrap <path to opsc diag>`
 
 The script can be executed from one or two levels above the nodes folder of the diag. As I use ssdownloader, I prefer to use the "top" level of the diag, but both can be used.
