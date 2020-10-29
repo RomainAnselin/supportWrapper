@@ -169,13 +169,15 @@ tarball(){
 
 browseropen() {
   echo "Opening browser"
-  if [[ "$(sed 's/.*microsoft.*/win/gi' /proc/version)" == "win" ]]; then opscdiag="$(wslpath -m "$opscpath")"
+  if [[ "$(sed 's/.*microsoft.*/win/gi' /proc/version)" == "win" ]]; then opscpath="$(wslpath -m "$opscpath")"
   fi
   "$browser" --new-window "file:///$opscpath$1/wrapper/index.html"
 }
 
 debuginfo() {
   echo "*** DEBUG ON: Dumping data ***"
+  echo "Opscdiag: $opscdiag Subdiag: $subdiag"
+  echo "Opscpath: $opscpath"
   echo "Browser: $browser"
   echo "Java: $javapath"
   $javapath -version
