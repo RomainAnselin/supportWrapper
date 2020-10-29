@@ -9,6 +9,7 @@ For beta/debugging:
 2. switch `debug=1` in `wrap.sh`
 If more info is required, please provide:
 `bash -xv <path>/wrap.sh <path to diag>`
+ie: `bash -xv ~/dev/supportWrapper/wrap.sh ./diagnostics\ \(1\) > ~/wrapper.log  2>&1`
 
 Prerequisites:
 In `wrap.sh`, change the following variables to fit your environment.
