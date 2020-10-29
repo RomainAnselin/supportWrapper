@@ -190,7 +190,7 @@ debuginfo() {
 
 ### Execution
 # Is there multiple diags in there? That may be a problem
-if [ $(find "$opsdiag" -maxdepth 1 -name '*-diagnostics-*' -type d | wc -l) -ge 2 ]; then
+if [ $(find "$opscdiag" -maxdepth 1 -name '*-diagnostics-*' -type d | wc -l) -ge 2 ]; then
   echo "Found more than one diagnostic folder in here. Please specify the exact diag. Exiting..."
   exit 1
 # make sure I am in a diag folder first or abort all
