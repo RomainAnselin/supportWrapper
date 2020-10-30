@@ -192,11 +192,14 @@ debuginfo() {
 # Is there multiple diags in there? That may be a problem
 if [ $(find "$opscdiag" -maxdepth 1 -name '*-diagnostics-*' -type d | wc -l) -ge 2 ]; then
   echo "Found more than one diagnostic folder in here. Please specify the exact diag. Exiting..."
+  ls -ltr
   exit 1
 # make sure I am in a diag folder first or abort all
 elif [[ -d $(find "$opscdiag" -mindepth 2 -maxdepth 2 -name 'nodes' -type d) ]]; then
   # Expected path above the diag. Get the diag path for sperf
-  subdiag="$(find "$opscdiag" -maxdepth 1 -name '*-diagnostics-*' -type d | head -1)"
+  pushd "$(find "$opscdiag" -maxdepth 1 -name '*-diagnostics-*' -type d | head -1)"
+  subdiag="$(pwd)"
+  popd
   if [[ -z "$subdiag" ]]; then
     echo "Cannot find the diagnostics folder. Exiting..."
     exit 1
