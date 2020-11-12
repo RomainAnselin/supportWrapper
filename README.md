@@ -1,9 +1,20 @@
 Getting started
 
-Known issues:
+# Known issues:
 - sperf will fail to run on version 0.5.x - please update to a more recent version (tested against 0.6.5 and 0.6.6)
 
-For beta/debugging:
+# TO DO:
+- For sperf solr, add an input parameter
+- Test vs OSS diag collector
+- Opening the web browser from WSL is challenging at best. Need to detect windows and output file location for windows without executing the browser - DONE
+- Implement debug - (in progress)
+- Handling of relative path (as it stands using ./diag lead to failure) - (in progress)
+- Text wrapping makes it hard to read but cannot be solved in current HTML frames. Refactor to HTML5 may help?
+- Make opening in new window choice
+- Simplify opscdiag/opscpath/subdiag kerfuffle to make the code easier to read
+- Set nibbler in silent mode (current view help see parsing issues) - to be discussed with Mike/Chun?
+
+# For beta/debugging:
 - while still implementing and making sure it can run on WSL, Mac and Linux seamlessly, in case of issue, please
 1. `rm -r <path to diag>/wrapper`
 2. switch `debug=1` in `wrap.sh`
@@ -11,7 +22,7 @@ If more info is required, please provide:
 `bash -xv <path>/wrap.sh <path to diag>`
 ie: `bash -xv ~/dev/supportWrapper/wrap.sh ./diagnostics\ \(1\) > ~/wrapper.log  2>&1`
 
-Prerequisites:
+# Prerequisites:
 In `wrap.sh`, change the following variables to fit your environment.
 All of them are self explanatory.
 Path to java for Nibbler, path to Python 3 for sperf + location of the tools...

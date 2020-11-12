@@ -1,12 +1,5 @@
 #!/bin/bash
 
-### TO DO:
-# - For sperf solr, add an input parameter
-# - Test vs OSS diag collector
-# - Opening the web browser from WSL is challenging at best. Need to detect windows and output file location for windows without executing the browser (in progress)
-# - Implement debug
-# - Handling of relative path (as it stands using ./diag lead to failure)
-
 debug=0
 template=$(dirname "${BASH_SOURCE[0]}")
 
@@ -16,7 +9,9 @@ if [ $# -ne 1 ]; then
 fi
 
 if [[ "$1" == "." ]]; then opscdiag="$(pwd)"
-else opscdiag="$1"
+# else opscdiag="$1"
+# depending on what kind of path you provide, I need in any scenario to find the full path
+else opscdiag="$(cd "$(dirname "$1")"; pwd -P)/$(basename "$1")"
 fi
 
 if [[ "$template" == "." ]]; then template="$(pwd)"
@@ -33,9 +28,9 @@ sperfpath=~/tools/sperf/scripts/sperf
 # Consider implementing a GC viewer tool maybe
 
 prep() {
-  mkdir "$opscpath"/wrapper
-  cp "$template"/index.html "$opscpath"/wrapper/index.html
-  cp "$template"/datastax.png "$opscpath"/wrapper/datastax.png
+  mkdir "$opscdiag"/wrapper
+  cp "$template"/index.html "$opscdiag"/wrapper/index.html
+  cp "$template"/datastax.png "$opscdiag"/wrapper/datastax.png
 }
 
 linkname() {
@@ -60,7 +55,7 @@ fi
 # Run tools
 nibblerrun() {
 echo "Nibbler running"
-"$javapath" -jar "$nibblerpath" "$opscpath"
+"$javapath" -jar "$nibblerpath" "$opscdiag"
 }
 
 sperfcheck() {
@@ -82,36 +77,36 @@ sperfrun() {
 sperfcheck
 if [[ "$debug" == "1" ]]; then
   printf 'DEBUG\t Pyornotpy: %s\n' "$pyornotpy"
-  echo "DEBUG  Command: "$pythonpath" "$sperfpath" -x -d "$subdiag" > "$opscpath"/wrapper/sperfgeneral.txt"
+  echo "DEBUG  Command: "$pythonpath" "$sperfpath" -x -d "$subdiag" > ./wrapper/sperfgeneral.txt"
 fi
 if [[ "$pyornotpy" == "1" ]]; then
   echo "Sperf summary"
-  "$pythonpath" "$sperfpath" -x -d "$subdiag" > "$opscpath"/wrapper/sperfgeneral.txt
+  "$pythonpath" "$sperfpath" -x -d "$subdiag" > ./wrapper/sperfgeneral.txt
   echo "Sperf GC analysis"
-  "$pythonpath" "$sperfpath" -x -d "$subdiag" core gc > "$opscpath"/wrapper/sperfgc.txt
+  "$pythonpath" "$sperfpath" -x -d "$subdiag" core gc > ./wrapper/sperfgc.txt
   echo "Sperf StatusLogger"
-  "$pythonpath" "$sperfpath" -x -d "$subdiag" core statuslogger > "$opscpath"/wrapper/sperfstatuslog.txt
+  "$pythonpath" "$sperfpath" -x -d "$subdiag" core statuslogger > ./wrapper/sperfstatuslog.txt
   echo "Sperf Slow Query"
-  "$pythonpath" "$sperfpath" -x core slowquery -d "$subdiag" > "$opscpath"/wrapper/sperfslow.txt
+  "$pythonpath" "$sperfpath" -x core slowquery -d "$subdiag" > ./wrapper/sperfslow.txt
   echo "Sperf Schema"
-  "$pythonpath" "$sperfpath" -x core schema -d "$subdiag" > "$opscpath"/wrapper/sperfschema.txt
+  "$pythonpath" "$sperfpath" -x core schema -d "$subdiag" > ./wrapper/sperfschema.txt
 else
   echo "Sperf summary"
-  "$sperfpath" -x -d "$subdiag" > "$opscpath"/wrapper/sperfgeneral.txt
+  "$sperfpath" -x -d "$subdiag" > ./wrapper/sperfgeneral.txt
   echo "Sperf GC analysis"
-  "$sperfpath" -x -d "$subdiag" core gc > "$opscpath"/wrapper/sperfgc.txt
+  "$sperfpath" -x -d "$subdiag" core gc > ./wrapper/sperfgc.txt
   echo "Sperf StatusLogger"
-  "$sperfpath" -x -d "$subdiag" core statuslogger > "$opscpath"/wrapper/sperfstatuslog.txt
+  "$sperfpath" -x -d "$subdiag" core statuslogger > ./wrapper/sperfstatuslog.txt
   echo "Sperf Slow Query"
-  "$sperfpath" -x core slowquery -d "$subdiag" > "$opscpath"/wrapper/sperfslow.txt
+  "$sperfpath" -x core slowquery -d "$subdiag" > ./wrapper/sperfslow.txt
   echo "Sperf Schema"
-  "$sperfpath" -x core schema -d "$subdiag" > "$opscpath"/wrapper/sperfschema.txt
+  "$sperfpath" -x core schema -d "$subdiag" > ./wrapper/sperfschema.txt
 fi
 }
 
 # Time to build the content
 header() {
-cat > "$opscpath"/wrapper/left_frame.htm << EOF
+cat > ./wrapper/left_frame.htm << EOF
 <!DOCTYPE html>
 <html>
 
@@ -126,36 +121,34 @@ EOF
 
 # Populate the frame for nibbler files
 nibblerpop() {
-cat >> "$opscpath"/wrapper/left_frame.htm << EOF
+cat >> ./wrapper/left_frame.htm << EOF
      <b>Nibbler</b><br>
 EOF
 
-for i in $(ls "$opscpath"/Nibbler)
+for i in $(ls ./Nibbler)
 do
   linkname
-	# printf '<a href="%s/Nibbler/%s" target = "center">%s</a><br>\n' "$opscpath" $i $link >> "$opscpath"/wrapper/left_frame.htm
-  printf '\t\t\t<a href="../Nibbler/%s" target = "center">%s</a><br>\n' $i $link >> "$opscpath"/wrapper/left_frame.htm
+	printf '\t\t\t<a href="../Nibbler/%s" target = "center">%s</a><br>\n' $i $link >> ./wrapper/left_frame.htm
 done
 }
 
 # Populate the frame for sperf files
 sperfpop() {
-cat >> "$opscpath"/wrapper/left_frame.htm << EOF
+cat >> ./wrapper/left_frame.htm << EOF
       <br>
     <b>Sperf</b><br>
 EOF
 
-for i in $(ls -tr "$opscpath"/wrapper | grep sperf*)
+for i in $(ls -tr ./wrapper | grep sperf*)
 do
   # echo $i
   linkname
-	# printf '<a href="%s/wrapper/%s" target = "center">%s</a><br>\n' "$opscpath" $i $link >> "$opscpath"/wrapper/left_frame.htm
-  printf '\t\t\t<a href="./%s" target = "center">%s</a><br>\n' $i $link >> "$opscpath"/wrapper/left_frame.htm
+	printf '\t\t\t<a href="./%s" target = "center">%s</a><br>\n' $i $link >> ./wrapper/left_frame.htm
 done
 }
 
 footer() {
-cat >> "$opscpath"/wrapper/left_frame.htm << EOF
+cat >> ./wrapper/left_frame.htm << EOF
    </body>
 
 </html>
@@ -163,21 +156,20 @@ EOF
 }
 
 tarball(){
-   echo "Compressing the data under "$opscpath"_parsed.tgz"
-   tar -czf "$opscpath"_parsed.tgz Nibbler wrapper
+   echo "Compressing the data under "$opscdiag"_parsed.tgz"
+   tar -czf "$opscdiag"_parsed.tgz Nibbler wrapper
 }
 
 browseropen() {
   echo "Opening browser"
-  if [[ "$(sed 's/.*microsoft.*/win/gi' /proc/version)" == "win" ]]; then opscpath="$(wslpath -m "$opscpath")"
+  if [[ "$(sed 's/.*microsoft.*/win/gi' /proc/version)" == "win" ]]; then opscdiag="$(wslpath -m "$opscdiag")"
   fi
-  "$browser" --new-window "file:///$opscpath$1/wrapper/index.html"
+  "$browser" --new-window "file:///$opscdiag$1/wrapper/index.html"
 }
 
 debuginfo() {
   echo "*** DEBUG ON: Dumping data ***"
   echo "Opscdiag: $opscdiag Subdiag: $subdiag"
-  echo "Opscpath: $opscpath"
   echo "Browser: $browser"
   echo "Java: $javapath"
   $javapath -version
@@ -197,16 +189,14 @@ if [ $(find "$opscdiag" -maxdepth 1 -name '*-diagnostics-*' -type d | wc -l) -ge
 # make sure I am in a diag folder first or abort all
 elif [[ -d $(find "$opscdiag" -mindepth 2 -maxdepth 2 -name 'nodes' -type d) ]]; then
   # Expected path above the diag. Get the diag path for sperf
-  pushd "$(find "$opscdiag" -maxdepth 1 -name '*-diagnostics-*' -type d | head -1)"
-  subdiag="$(pwd)"
-  popd
+  subdiag="$(find "$opscdiag" -mindepth 1 -maxdepth 1 -name '*-diagnostics-*' -type d)"
   if [[ -z "$subdiag" ]]; then
     echo "Cannot find the diagnostics folder. Exiting..."
     exit 1
   fi
 elif [[ -d $(find "$opscdiag" -mindepth 1 -maxdepth 1 -name 'nodes' -type d) ]]; then
   # Directly in the directory containing the nodes folder. Setting subdiag as per the current diag.
-  subdiag="$opscpath"
+  subdiag="$opscdiag"
 else
   echo "Cannot find the nodes folder. Exiting..."
   exit 1
@@ -214,23 +204,22 @@ fi
 
 # Open existing report or process the request
 if [[ "$debug" == "1" ]]; then
-  printf 'DEBUG\t Opscdiag: "%s" Template: "%s" Subdiag: "%s"\n' "$opscpath" "$template" "$subdiag"
+  printf 'DEBUG\t Opscdiag: "%s" Template: "%s" Subdiag: "%s"\n' "$opscdiag" "$template" "$subdiag"
 fi
 
 pushd "$opscdiag" > /dev/null
-opscpath="$(pwd)"
 # File was already processed locally
-if [[ -f "$opscpath"/wrapper/index.html ]]; then
+if [[ -f "$opscdiag"/wrapper/index.html ]]; then
   browseropen
   # If parsed diag was processed and sent to ZD by a fellow supportineer and brought back by ssdownloader.
   # This will require more testing
-elif [[ -f "$opscpath"_parsed/wrapper/index.html ]]; then
+elif [[ -f "$opscdiag"_parsed/wrapper/index.html ]]; then
   browseropen _parsed
-elif [[ -f "$opscpath"_parsed.tgz ]]; then
+elif [[ -f "$opscdiag"_parsed.tgz ]]; then
   # The tgz exists but wasnt uncompressed
   echo "Found parsed archive: "$opscdiag"_parsed.tgz"
   echo "Uncompressing existing parsed diag and opening it"
-  echo "Will open "file:///"$opscpath"/wrapper/index.html""
+  echo "Will open "file:///"$opscdiag"/wrapper/index.html""
   tar zxf "$opscdiag"_parsed.tgz
   browseropen
 else
