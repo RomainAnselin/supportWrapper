@@ -17,15 +17,13 @@ fi
 if [[ "$template" == "." ]]; then template="$(pwd)"
 fi
 
-# WARNING: If your path contains spaces/brackets (ie: Windows), put the variable in double quotes.
-# ie: nibblerpath="/mnt/c/Users/My User/Nibbler.jar"
-# browser="/mnt/c/Program Files (x86)/Microsoft/Edge/Application/msedge.exe"
-browser=firefox
-javapath=/usr/lib/jvm/liberica-jdk8u265-full/jre/bin/java
-nibblerpath=~/tools/Nibbler.jar
-pythonpath=~/dev/virtualenvs/py3/bin/python
-sperfpath=~/tools/sperf/scripts/sperf
-# Consider implementing a GC viewer tool maybe
+if [[ -f "$template/wrap.conf" ]]; then
+  source $template/wrap.conf
+else
+  echo "Missing wrap.conf file under $template"
+  usage
+  exit 1
+fi
 
 prep() {
   mkdir "$opscdiag"/wrapper
@@ -43,10 +41,13 @@ linkname() {
   elif [[ "$i" == "Table_Statistics.out" ]]; then link=TableStats
   elif [[ "$i" == "Thread_Pool_Statistics.out" ]]; then link=ThreadPool
   elif [[ "$i" == "sperfgc.txt" ]]; then link=GC
+  elif [[ "$i" == "sperfnodegc.txt" ]]; then link=NodeGC
   elif [[ "$i" == "sperfgeneral.txt" ]]; then link=General
   elif [[ "$i" == "sperfstatuslog.txt" ]]; then link=StatusLogger
   elif [[ "$i" == "sperfslow.txt" ]]; then link=SlowQueries
   elif [[ "$i" == "sperfschema.txt" ]]; then link=Schema
+  elif [[ "$i" == "sperfsolrcache.txt" ]]; then link=SolrCache
+  elif [[ "$i" == "sperfsolrscore.txt" ]]; then link=SolrScore
   else link=$i
 fi
 # echo $link
@@ -84,23 +85,35 @@ if [[ "$pyornotpy" == "1" ]]; then
   "$pythonpath" "$sperfpath" -x -d "$subdiag" > ./wrapper/sperfgeneral.txt
   echo "Sperf GC analysis"
   "$pythonpath" "$sperfpath" -x -d "$subdiag" core gc > ./wrapper/sperfgc.txt
+  echo "Sperf GC per node"
+  "$pythonpath" "$sperfpath" -x -d "$subdiag" core gc -r nodes > ./wrapper/sperfnodegc.txt
   echo "Sperf StatusLogger"
   "$pythonpath" "$sperfpath" -x -d "$subdiag" core statuslogger > ./wrapper/sperfstatuslog.txt
   echo "Sperf Slow Query"
   "$pythonpath" "$sperfpath" -x core slowquery -d "$subdiag" > ./wrapper/sperfslow.txt
   echo "Sperf Schema"
   "$pythonpath" "$sperfpath" -x core schema -d "$subdiag" > ./wrapper/sperfschema.txt
+  echo "Sperf Solr Filtercache"
+  "$pythonpath" "$sperfpath" -x search filtercache -d "$subdiag" > ./wrapper/sperfsolrcache.txt
+  echo "Sperf Solr Queryscore"
+  "$pythonpath" "$sperfpath" -x search queryscore -d "$subdiag" > ./wrapper/sperfsolrscore.txt
 else
   echo "Sperf summary"
   "$sperfpath" -x -d "$subdiag" > ./wrapper/sperfgeneral.txt
   echo "Sperf GC analysis"
   "$sperfpath" -x -d "$subdiag" core gc > ./wrapper/sperfgc.txt
+  echo "Sperf GC per node"
+  "$sperfpath" -x -d "$subdiag" core gc -r nodes > ./wrapper/sperfnodegc.txt
   echo "Sperf StatusLogger"
   "$sperfpath" -x -d "$subdiag" core statuslogger > ./wrapper/sperfstatuslog.txt
   echo "Sperf Slow Query"
   "$sperfpath" -x core slowquery -d "$subdiag" > ./wrapper/sperfslow.txt
   echo "Sperf Schema"
   "$sperfpath" -x core schema -d "$subdiag" > ./wrapper/sperfschema.txt
+  echo "Sperf Solr Filtercache"
+  "$sperfpath" -x search filtercache -d "$subdiag" > ./wrapper/sperfsolrcache.txt
+  echo "Sperf Solr Queryscore"
+  "$sperfpath" -x search queryscore -d "$subdiag" > ./wrapper/sperfsolrscore.txt
 fi
 }
 

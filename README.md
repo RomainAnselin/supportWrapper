@@ -4,10 +4,13 @@ Getting started
 - sperf will fail to run on version 0.5.x - please update to a more recent version (tested against 0.6.5 and 0.6.6)
 
 # TO DO:
+Ongoing:
+- Make opening wrapped info in new window a choice
+- Source config info from separate file
+Todo:
 - For sperf solr, add an input parameter
 - Test vs OSS diag collector
 - Text wrapping makes it hard to read but cannot be solved in current HTML frames. Refactor to HTML5 may be necessary
-- Make opening in new window choice
 - Set nibbler in silent mode (current view help see parsing issues) - to be discussed with Mike/Chun?
 
 # For beta/debugging:
