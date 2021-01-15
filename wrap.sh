@@ -1,17 +1,34 @@
 #!/bin/bash
 
 debug=0
+
+usage() {
+  if [ $# -ne 1 ]; then
+    echo "Usage: $0 [-s] [-p] [-h] <Path to Opscenter diag>"
+    echo "  -s   solr data"
+    echo "  -p   GC per node"
+    echo "  -h   show this help"
+    exit 1
+  fi
+}
+
+while getopts "sph" option; do
+  case "${option}" in
+    s) echo "Solr parsing requested"
+       solrparse=1 ;;
+    p) echo "Node per node parsing"
+       pernode=1  ;;
+    h) echo "Showing help"
+       usage ;;
+  esac
+done
+
 template=$(dirname "${BASH_SOURCE[0]}")
 
-if [ $# -ne 1 ]; then
-    echo "Usage: $0 <Path to Opscenter diag>"
-    exit 1
-fi
-
-if [[ "$1" == "." ]]; then opscdiag="$(pwd)"
+if [[ "${BASH_ARGV[0]}" == "." ]]; then opscdiag="$(pwd)"
 # else opscdiag="$1"
 # depending on what kind of path you provide, I need in any scenario to find the full path
-else opscdiag="$(cd "$(dirname "$1")"; pwd -P)/$(basename "$1")"
+else opscdiag="$(cd "$(dirname "${BASH_ARGV[0]}")"; pwd -P)/$(basename "${BASH_ARGV[0]}")"
 fi
 
 if [[ "$template" == "." ]]; then template="$(pwd)"
@@ -85,35 +102,43 @@ if [[ "$pyornotpy" == "1" ]]; then
   "$pythonpath" "$sperfpath" -x -d "$subdiag" > ./wrapper/sperfgeneral.txt
   echo "Sperf GC analysis"
   "$pythonpath" "$sperfpath" -x -d "$subdiag" core gc > ./wrapper/sperfgc.txt
-  echo "Sperf GC per node"
-  "$pythonpath" "$sperfpath" -x -d "$subdiag" core gc -r nodes > ./wrapper/sperfnodegc.txt
+  if [[ "$pernode" == 1 ]]; then
+    echo "Sperf GC per node"
+    "$pythonpath" "$sperfpath" -x -d "$subdiag" core gc -r nodes > ./wrapper/sperfnodegc.txt
+  fi
   echo "Sperf StatusLogger"
   "$pythonpath" "$sperfpath" -x -d "$subdiag" core statuslogger > ./wrapper/sperfstatuslog.txt
   echo "Sperf Slow Query"
   "$pythonpath" "$sperfpath" -x core slowquery -d "$subdiag" > ./wrapper/sperfslow.txt
   echo "Sperf Schema"
   "$pythonpath" "$sperfpath" -x core schema -d "$subdiag" > ./wrapper/sperfschema.txt
-  echo "Sperf Solr Filtercache"
-  "$pythonpath" "$sperfpath" -x search filtercache -d "$subdiag" > ./wrapper/sperfsolrcache.txt
-  echo "Sperf Solr Queryscore"
-  "$pythonpath" "$sperfpath" -x search queryscore -d "$subdiag" > ./wrapper/sperfsolrscore.txt
+  if [[ "$solrparse" == 1 ]]; then
+    echo "Sperf Solr Filtercache"
+    "$pythonpath" "$sperfpath" -x search filtercache -d "$subdiag" > ./wrapper/sperfsolrcache.txt
+    echo "Sperf Solr Queryscore"
+    "$pythonpath" "$sperfpath" -x search queryscore -d "$subdiag" > ./wrapper/sperfsolrscore.txt
+  fi
 else
   echo "Sperf summary"
   "$sperfpath" -x -d "$subdiag" > ./wrapper/sperfgeneral.txt
   echo "Sperf GC analysis"
   "$sperfpath" -x -d "$subdiag" core gc > ./wrapper/sperfgc.txt
-  echo "Sperf GC per node"
-  "$sperfpath" -x -d "$subdiag" core gc -r nodes > ./wrapper/sperfnodegc.txt
+  if [[ "$pernode" == 1 ]]; then
+    echo "Sperf GC per node"
+    "$sperfpath" -x -d "$subdiag" core gc -r nodes > ./wrapper/sperfnodegc.txt
+  fi
   echo "Sperf StatusLogger"
   "$sperfpath" -x -d "$subdiag" core statuslogger > ./wrapper/sperfstatuslog.txt
   echo "Sperf Slow Query"
   "$sperfpath" -x core slowquery -d "$subdiag" > ./wrapper/sperfslow.txt
   echo "Sperf Schema"
   "$sperfpath" -x core schema -d "$subdiag" > ./wrapper/sperfschema.txt
-  echo "Sperf Solr Filtercache"
-  "$sperfpath" -x search filtercache -d "$subdiag" > ./wrapper/sperfsolrcache.txt
-  echo "Sperf Solr Queryscore"
-  "$sperfpath" -x search queryscore -d "$subdiag" > ./wrapper/sperfsolrscore.txt
+  if [[ "$solrparse" == 1 ]]; then
+    echo "Sperf Solr Filtercache"
+    "$sperfpath" -x search filtercache -d "$subdiag" > ./wrapper/sperfsolrcache.txt
+    echo "Sperf Solr Queryscore"
+    "$sperfpath" -x search queryscore -d "$subdiag" > ./wrapper/sperfsolrscore.txt
+  fi
 fi
 }
 
@@ -177,7 +202,9 @@ browseropen() {
   echo "Opening browser"
   if [[ "$(sed 's/.*microsoft.*/win/gi' /proc/version)" == "win" ]]; then opscdiag="$(wslpath -m "$opscdiag")"
   fi
-  "$browser" --new-window "file:///$opscdiag$1/wrapper/index.html"
+  if [[ "$newwindow" == "1" ]]; then "$browser" --new-window "file:///$opscdiag$1/wrapper/index.html"
+  else "$browser" "file:///$opscdiag$1/wrapper/index.html"
+  fi
 }
 
 debuginfo() {
