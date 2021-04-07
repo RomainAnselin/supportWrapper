@@ -7,6 +7,7 @@ usage() {
     echo "Usage: $0 [-s] [-p] [-h] <Path to Opscenter diag>"
     echo "  -s   solr data"
     echo "  -p   GC per node"
+    # TODO: Reset -r option to erase existing parsed data if you want to re-run with different options
     echo "  -h   show this help"
     exit 1
   fi
@@ -58,11 +59,12 @@ linkname() {
   elif [[ "$i" == "Table_Statistics.out" ]]; then link=TableStats
   elif [[ "$i" == "Thread_Pool_Statistics.out" ]]; then link=ThreadPool
   elif [[ "$i" == "sperfgc.txt" ]]; then link=GC
-  elif [[ "$i" == "sperfnodegc.txt" ]]; then link=NodeGC
   elif [[ "$i" == "sperfgeneral.txt" ]]; then link=General
   elif [[ "$i" == "sperfstatuslog.txt" ]]; then link=StatusLogger
   elif [[ "$i" == "sperfslow.txt" ]]; then link=SlowQueries
   elif [[ "$i" == "sperfschema.txt" ]]; then link=Schema
+  elif [[ "$i" == "sperfnodegc.txt" ]]; then link=NodeGC
+  elif [[ "$i" == "sperfnodestatuslog.txt" ]]; then link=NodeStatusLogger
   elif [[ "$i" == "sperfsolrcache.txt" ]]; then link=SolrCache
   elif [[ "$i" == "sperfsolrscore.txt" ]]; then link=SolrScore
   else link=$i
@@ -102,16 +104,18 @@ if [[ "$pyornotpy" == "1" ]]; then
   "$pythonpath" "$sperfpath" -x -d "$subdiag" > ./wrapper/sperfgeneral.txt
   echo "Sperf GC analysis"
   "$pythonpath" "$sperfpath" -x -d "$subdiag" core gc > ./wrapper/sperfgc.txt
-  if [[ "$pernode" == 1 ]]; then
-    echo "Sperf GC per node"
-    "$pythonpath" "$sperfpath" -x -d "$subdiag" core gc -r nodes > ./wrapper/sperfnodegc.txt
-  fi
   echo "Sperf StatusLogger"
   "$pythonpath" "$sperfpath" -x -d "$subdiag" core statuslogger > ./wrapper/sperfstatuslog.txt
   echo "Sperf Slow Query"
   "$pythonpath" "$sperfpath" -x core slowquery -d "$subdiag" > ./wrapper/sperfslow.txt
   echo "Sperf Schema"
   "$pythonpath" "$sperfpath" -x core schema -d "$subdiag" > ./wrapper/sperfschema.txt
+  if [[ "$pernode" == 1 ]]; then
+    echo "Sperf GC per node"
+    "$pythonpath" "$sperfpath" -x -d "$subdiag" core gc -r nodes > ./wrapper/sperfnodegc.txt
+    echo "Sperf StatusLogger per node"
+    "$pythonpath" "$sperfpath" -x -d "$subdiag" core statuslogger -r histogram > ./wrapper/sperfnodestatuslog.txt
+  fi
   if [[ "$solrparse" == 1 ]]; then
     echo "Sperf Solr Filtercache"
     "$pythonpath" "$sperfpath" -x search filtercache -d "$subdiag" > ./wrapper/sperfsolrcache.txt
@@ -123,16 +127,18 @@ else
   "$sperfpath" -x -d "$subdiag" > ./wrapper/sperfgeneral.txt
   echo "Sperf GC analysis"
   "$sperfpath" -x -d "$subdiag" core gc > ./wrapper/sperfgc.txt
-  if [[ "$pernode" == 1 ]]; then
-    echo "Sperf GC per node"
-    "$sperfpath" -x -d "$subdiag" core gc -r nodes > ./wrapper/sperfnodegc.txt
-  fi
   echo "Sperf StatusLogger"
   "$sperfpath" -x -d "$subdiag" core statuslogger > ./wrapper/sperfstatuslog.txt
   echo "Sperf Slow Query"
   "$sperfpath" -x core slowquery -d "$subdiag" > ./wrapper/sperfslow.txt
   echo "Sperf Schema"
   "$sperfpath" -x core schema -d "$subdiag" > ./wrapper/sperfschema.txt
+  if [[ "$pernode" == 1 ]]; then
+    echo "Sperf GC per node"
+    "$sperfpath" -x -d "$subdiag" core gc -r nodes > ./wrapper/sperfnodegc.txt
+    echo "Sperf StatusLogger per node"
+    "$sperfpath" -x -d "$subdiag" core statuslogger -r histogram > ./wrapper/sperfnodestatuslog.txt
+  fi
   if [[ "$solrparse" == 1 ]]; then
     echo "Sperf Solr Filtercache"
     "$sperfpath" -x search filtercache -d "$subdiag" > ./wrapper/sperfsolrcache.txt
