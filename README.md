@@ -4,14 +4,29 @@ Getting started
 - sperf will fail to run on version 0.5.x - please update to a more recent version (tested against 0.6.5 and 0.6.6)
 
 # TO DO:
-Ongoing:
-- Make opening wrapped info in new window a choice
-- Source config info from separate file
-Todo:
-- For sperf solr, add an input parameter
 - Test vs OSS diag collector
 - Text wrapping makes it hard to read but cannot be solved in current HTML frames. Refactor to HTML5 may be necessary
 - Set nibbler in silent mode (current view help see parsing issues) - to be discussed with Mike/Chun?
+
+# Updating
+
+1- In newer versions, configuration file has been isolated
+2- New parameter with ability to choose if the report should be opened in new window
+
+```
+# Open the result in a separate window
+newwindow=1
+```
+
+3- the wrapper now takes 3 options:
+`-s` -> add 2 Solr sperf commands
+`-p` -> per node view for GC and StatusLogger (as opposed to global. Takes more time and CPU)
+`-h` -> basic help menu
+ie: `wrap.sh -s -p <diag>`
+To update:
+1- *backup your config parameters from the shell script*
+2- git pull in your wrapper folder
+3- copy your config params in the conf file
 
 # For beta/debugging:
 - while still implementing and making sure it can run on WSL, Mac and Linux seamlessly, in case of issue, please
@@ -22,9 +37,9 @@ If more info is required, please provide:
 ie: `bash -xv ~/dev/supportWrapper/wrap.sh ./diagnostics\ \(1\) > ~/wrapper.log  2>&1`
 
 # Prerequisites:
-In `wrap.sh`, change the following variables to fit your environment.
-All of them are self explanatory.
-Path to java for Nibbler, path to Python 3 for sperf + location of the tools...
+In `wrap.conf`, change the following variables to fit your environment.
+All of them are self explanatory:
+Path to java for Nibbler, path to Python 3 for sperf (optional if using sperf binaries), location sperf and nibbler tools
 Also define your favorite web browser (firefox, chrome, edge...)
 
 ```
@@ -37,6 +52,8 @@ nibblerpath=~/tools/Nibbler.jar
 pythonpath=~/dev/virtualenvs/py3/bin/python
 sperfpath=~/tools/sperf/scripts/sperf
 ```
+
+# How it works:
 
 1- Validate functionality of the tool without alias:
 `<path>/wrap.sh <path to diag>`
@@ -103,6 +120,13 @@ Sperf Schema
 
 # Fixed issues
 - Handling of relative path
-- Implement debug - (in progress)
+- Implement debug
 - Opening the web browser from WSL is challenging at best. Need to detect windows and output file location for windows without executing the browser
 - Simplify opscdiag/opscpath/subdiag kerfuffle to make the code easier to read
+
+- Make opening wrapped info in new window a choice
+- Source config info from separate file
+- For sperf solr, add an input parameter
+
+# 04/05/2022
+Parallelized sperf commands execution in the background
