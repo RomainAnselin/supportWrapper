@@ -58,15 +58,15 @@ linkname() {
   elif [[ "$i" == "System_Log_Event_Info.out" ]]; then link=SystemLog
   elif [[ "$i" == "Table_Statistics.out" ]]; then link=TableStats
   elif [[ "$i" == "Thread_Pool_Statistics.out" ]]; then link=ThreadPool
-  elif [[ "$i" == "sperfgc.txt" ]]; then link=GC
-  elif [[ "$i" == "sperfgeneral.txt" ]]; then link=General
-  elif [[ "$i" == "sperfstatuslog.txt" ]]; then link=StatusLogger
-  elif [[ "$i" == "sperfslow.txt" ]]; then link=SlowQueries
-  elif [[ "$i" == "sperfschema.txt" ]]; then link=Schema
-  elif [[ "$i" == "sperfnodegc.txt" ]]; then link=NodeGC
-  elif [[ "$i" == "sperfnodestatuslog.txt" ]]; then link=NodeStatusLogger
-  elif [[ "$i" == "sperfsolrcache.txt" ]]; then link=SolrCache
-  elif [[ "$i" == "sperfsolrscore.txt" ]]; then link=SolrScore
+  elif [[ "$i" == "sperf2gc.txt" ]]; then link=GC
+  elif [[ "$i" == "sperf1general.txt" ]]; then link=General
+  elif [[ "$i" == "sperf3statuslog.txt" ]]; then link=StatusLogger
+  elif [[ "$i" == "sperf4slow.txt" ]]; then link=SlowQueries
+  elif [[ "$i" == "sperf5schema.txt" ]]; then link=Schema
+  elif [[ "$i" == "sperf6nodegc.txt" ]]; then link=NodeGC
+  elif [[ "$i" == "sperf7nodestatuslog.txt" ]]; then link=NodeStatusLogger
+  elif [[ "$i" == "sperf8solrcache.txt" ]]; then link=SolrCache
+  elif [[ "$i" == "sperf9solrscore.txt" ]]; then link=SolrScore
   else link=$i
 fi
 # echo $link
@@ -99,54 +99,55 @@ if [[ "$debug" == "1" ]]; then
   printf 'DEBUG\t Pyornotpy: %s\n' "$pyornotpy"
   echo "DEBUG  Command: "$pythonpath" "$sperfpath" -x -d "$subdiag" > ./wrapper/sperfgeneral.txt"
 fi
+
 if [[ "$pyornotpy" == "1" ]]; then
-  echo "Sperf summary"
-  "$pythonpath" "$sperfpath" -x -d "$subdiag" > ./wrapper/sperfgeneral.txt &
-  echo "Sperf GC analysis"
-  "$pythonpath" "$sperfpath" -x -d "$subdiag" core gc > ./wrapper/sperfgc.txt &
-  echo "Sperf StatusLogger"
-  "$pythonpath" "$sperfpath" -x -d "$subdiag" core statuslogger > ./wrapper/sperfstatuslog.txt &
-  echo "Sperf Slow Query"
-  "$pythonpath" "$sperfpath" -x core slowquery -d "$subdiag" > ./wrapper/sperfslow.txt &
-  echo "Sperf Schema"
-  "$pythonpath" "$sperfpath" -x core schema -d "$subdiag" > ./wrapper/sperfschema.txt &
-  if [[ "$pernode" == 1 ]]; then
-    echo "Sperf GC per node"
-    "$pythonpath" "$sperfpath" -x -d "$subdiag" core gc -r nodes > ./wrapper/sperfnodegc.txt &
-    echo "Sperf StatusLogger per node"
-    "$pythonpath" "$sperfpath" -x -d "$subdiag" core statuslogger -r histogram > ./wrapper/sperfnodestatuslog.txt &
-  fi
-  if [[ "$solrparse" == 1 ]]; then
-    echo "Sperf Solr Filtercache"
-    "$pythonpath" "$sperfpath" -x search filtercache -d "$subdiag" > ./wrapper/sperfsolrcache.txt &
-    echo "Sperf Solr Queryscore"
-    "$pythonpath" "$sperfpath" -x search queryscore -d "$subdiag" > ./wrapper/sperfsolrscore.txt &
-  fi
+  sperfcmd="$pythonpath $sperfpath"
+  printf 'sperfcmd: %s \n' "$sperfcmd"
 else
-  echo "Sperf summary"
-  "$sperfpath" -x -d "$subdiag" > ./wrapper/sperfgeneral.txt &
-  echo "Sperf GC analysis"
-  "$sperfpath" -x -d "$subdiag" core gc > ./wrapper/sperfgc.txt &
-  echo "Sperf StatusLogger"
-  "$sperfpath" -x -d "$subdiag" core statuslogger > ./wrapper/sperfstatuslog.txt &
-  echo "Sperf Slow Query"
-  "$sperfpath" -x core slowquery -d "$subdiag" > ./wrapper/sperfslow.txt &
-  echo "Sperf Schema"
-  "$sperfpath" -x core schema -d "$subdiag" > ./wrapper/sperfschema.txt &
-  if [[ "$pernode" == 1 ]]; then
-    echo "Sperf GC per node"
-    "$sperfpath" -x -d "$subdiag" core gc -r nodes > ./wrapper/sperfnodegc.txt &
-    echo "Sperf StatusLogger per node"
-    "$sperfpath" -x -d "$subdiag" core statuslogger -r histogram > ./wrapper/sperfnodestatuslog.txt &
-  fi
-  if [[ "$solrparse" == 1 ]]; then
-    echo "Sperf Solr Filtercache"
-    "$sperfpath" -x search filtercache -d "$subdiag" > ./wrapper/sperfsolrcache.txt &
-    echo "Sperf Solr Queryscore"
-    "$sperfpath" -x search queryscore -d "$subdiag" > ./wrapper/sperfsolrscore.txt &
-  fi
+  sperfcmd="$sperfpath"
 fi
+
+echo "Sperf summary"
+${sperfcmd} -x -d "$subdiag" > ./wrapper/sperf1general.txt &
+echo "Sperf GC analysis"
+${sperfcmd} -x -d "$subdiag" core gc > ./wrapper/sperf2gc.txt &
+echo "Sperf StatusLogger"
+${sperfcmd} -x -d "$subdiag" core statuslogger > ./wrapper/sperf3statuslog.txt &
+echo "Sperf Slow Query"
+${sperfcmd} -x core slowquery -d "$subdiag" > ./wrapper/sperf4slow.txt &
+echo "Sperf Schema"
+${sperfcmd} -x core schema -d "$subdiag" > ./wrapper/sperf5schema.txt &
+if [[ "$pernode" == 1 ]]; then
+  echo "Sperf GC per node"
+  ${sperfcmd} -x -d "$subdiag" core gc -r nodes > ./wrapper/sperf6nodegc.txt &
+  echo "Sperf StatusLogger per node"
+  ${sperfcmd} -x -d "$subdiag" core statuslogger -r histogram > ./wrapper/sperf7nodestatuslog.txt &
+fi
+if [[ "$solrparse" == 1 ]]; then
+  echo "Sperf Solr Filtercache"
+  ${sperfcmd} -x search filtercache -d "$subdiag" > ./wrapper/sperf8solrcache.txt &
+  echo "Sperf Solr Queryscore"
+  ${sperfcmd} -x search queryscore -d "$subdiag" > ./wrapper/sperf9solrscore.txt &
+fi
+
 wait
+}
+
+slgrep() {
+if [[ -f $grepsl ]]; then
+  echo ; echo "Running SL greps"
+  $grepsl -c "$opscdiag" &
+  $grepsl -g "$opscdiag" &
+  $grepsl -s "$opscdiag" &
+  $grepsl -6 "$opscdiag" &
+  $grepsl -t "$opscdiag" &
+  $grepsl -q "$opscdiag" &
+  $grepsl -b "$opscdiag" &
+  $grepsl -l "$opscdiag" &
+  wait
+else
+  echo ERROR: Grep script not found. Skipping...
+fi
 }
 
 # Time to build the content
@@ -170,7 +171,7 @@ cat >> ./wrapper/left_frame.htm << EOF
      <b>Nibbler</b><br>
 EOF
 
-for i in $(ls ./Nibbler)
+for i in $(ls ./Nibbler | egrep -v '[1-3]')
 do
   linkname
 	printf '\t\t\t<a href="../Nibbler/%s" target = "center">%s</a><br>\n' $i $link >> ./wrapper/left_frame.htm
@@ -184,11 +185,25 @@ cat >> ./wrapper/left_frame.htm << EOF
     <b>Sperf</b><br>
 EOF
 
-for i in $(ls -tr ./wrapper | grep sperf*)
+for i in $(ls ./wrapper | grep sperf*)
 do
   # echo $i
   linkname
 	printf '\t\t\t<a href="./%s" target = "center">%s</a><br>\n' $i $link >> ./wrapper/left_frame.htm
+done
+}
+
+grepspop() {
+cat >> ./wrapper/left_frame.htm << EOF
+      <br>
+    <b>Greps</b><br>
+EOF
+
+for i in $(ls ./Nibbler | egrep '[1-3]')
+do
+  # echo $i
+  linkname
+	printf '\t\t\t<a href="../Nibbler/%s" target = "center">%s</a><br>\n' $i $link >> ./wrapper/left_frame.htm
 done
 }
 
@@ -273,15 +288,19 @@ else
   prep
   nibblerrun
   sperfrun
+  slgrep
   header
   nibblerpop
   sperfpop
+  grepspop
   footer
   # need to revisit tarball generation. Too many issues at the moment
   # tarball
   browseropen
 fi
 
-if [[ "$debug" == "1" ]]; then debuginfo
+if [[ "$debug" == "1" ]]; then 
+  debuginfo
 fi
+
 popd > /dev/null
