@@ -84,39 +84,39 @@ function greps() {
 	#touch $histograms
 
 	echo_request "DROPPED MESSAGES"
-	egrep -icR 'DroppedMessages.java' ./ --include={system,debug}* | egrep ":[1-9]" | awk -F: '{print $1,$2}' | sort -k2 -r -h | column -t >> $grep_file
+	egrep -icR 'DroppedMessages.java' ./ --include={system,debug}\* | egrep ":[1-9]" | awk -F: '{print $1,$2}' | sort -k2 -r -h | column -t >> $grep_file
 
 	echo_request "POSSIBLE NETWORK ISSUES - unexpected exception during request"
-	grep -ciR 'Unexpected exception during request' ./ --include={system,debug}* | egrep ":[1-9]" | awk -F: '{print $1,$2}' | sort -k2 -r -h | column -t >> $grep_file
+	grep -ciR 'Unexpected exception during request' ./ --include={system,debug}\* | egrep ":[1-9]" | awk -F: '{print $1,$2}' | sort -k2 -r -h | column -t >> $grep_file
 
 	echo_request "HINTED HANDOFFS TO ENDPOINTS"
-	grep -R 'Finished hinted handoff' ./ --include={system,debug}* | awk -F'endpoint' '{print $2}' | awk '{print $1}' | sort | uniq -c | sort >> $grep_file
+	grep -R 'Finished hinted handoff' ./ --include={system,debug}\* | awk -F'endpoint' '{print $2}' | awk '{print $1}' | sort | uniq -c | sort >> $grep_file
 
 	# echo_request "COMMIT-LOG-ALLOCATE FLUSHES - TODAY"
 	# egrep -ciR 'commit-log-allocator.*$today.*enqueuing' ./ --include={debug,output}* | sort -k 1 | awk -F':' '{print $1,$2}' | column -t >> $grep_file
 
 	echo_request "FLUSHES BY THREAD - refer to https://datastax.jira.com/wiki/spaces/~41089967/pages/2660761722/Flushing+by+thread+type"
-	egrep -iRh 'enqueuing flush of' ./ --include={system,debug}* | awk -F']' '{print $1}' | awk -F'[' '{print $2}' | sed 's/:.*//g' | awk -F'(' '{print $1}' | awk -F'-' '{print $1}' | sort | uniq -c | sort >> $grep_file
+	egrep -iRh 'enqueuing flush of' ./ --include={system,debug}\* | awk -F']' '{print $1}' | awk -F'[' '{print $2}' | sed 's/:.*//g' | awk -F'(' '{print $1}' | awk -F'-' '{print $1}' | sort | uniq -c | sort >> $grep_file
 	# echo_request "FLUSHES BY THREAD - TODAY"
-	# egrep -iRh '$today.*enqueuing flush of' ./ --include={system,debug}* | awk -F']' '{print $1}' | awk -F'[' '{print $2}' | sed 's/:.*//g' | sort | uniq -c >> $grep_file
+	# egrep -iRh '$today.*enqueuing flush of' ./ --include={system,debug}\* | awk -F']' '{print $1}' | awk -F'[' '{print $2}' | sed 's/:.*//g' | sort | uniq -c >> $grep_file
 
 	echo_request "LARGEST 20 FLUSHES"
-	egrep -iR 'enqueuing flush of' ./ --include={system,debug}* | awk -F'Enqueuing' '{print $2}' | awk -F':' '{print $2}' | column -t | sort -h | tail -r -20 >> $grep_file
+	egrep -iR 'enqueuing flush of' ./ --include={system,debug}\* | awk -F'Enqueuing' '{print $2}' | awk -F':' '{print $2}' | column -t | sort -h | tail -20 >> $grep_file
 
 	# echo_request "SMALLEST 10 FLUSHES"
-	# egrep -iR 'enqueuing flush of' ./ --include={system,debug}* | awk -F'Enqueuing' '{print $2}' | awk -F':' '{print $2}' | column -t | sort -h | head -10 >> $grep_file
+	# egrep -iR 'enqueuing flush of' ./ --include={system,debug}\* | awk -F'Enqueuing' '{print $2}' | awk -F':' '{print $2}' | column -t | sort -h | head -10 >> $grep_file
 
 	echo_request "FLUSHING LARGEST"
 	echo "Any flushes larger than .9x" >> $grep_file
 	egrep -R "Flushing largest.*\.[8-9][0-9]" ./ --include=debug.log >> $grep_file
 
 	# echo_request "AVERAGE FLUSH SIZE"
-	# egrep -iR 'enqueuing flush of' ./ --include={system,debug}* | awk -F'Enqueuing' '{print $2}' | awk -F':' '{print $2}' | column -t | awk 'BEGIN {p=1}; {for (i=1; i<=NF;i++) total = total+$i; p=p+1}; END {print sprintf("%.0f", total/p)}' | awk '{ byte =$1 /1024/1024; print byte " MB" }' >> $grep_file
+	# egrep -iR 'enqueuing flush of' ./ --include={system,debug}\* | awk -F'Enqueuing' '{print $2}' | awk -F':' '{print $2}' | column -t | awk 'BEGIN {p=1}; {for (i=1; i<=NF;i++) total = total+$i; p=p+1}; END {print sprintf("%.0f", total/p)}' | awk '{ byte =$1 /1024/1024; print byte " MB" }' >> $grep_file
 	echo_request "TOTAL COMPACTIONS"
-	egrep -ciR 'Compacted' ./ --include={system,debug}* | sort -k 1 | egrep ":[1-9]" | awk -F: '{print $1,$2}' | sort -k2 -r -h | column -t >> $grep_file
+	egrep -ciR 'Compacted' ./ --include={system,debug}\* | sort -k 1 | egrep ":[1-9]" | awk -F: '{print $1,$2}' | sort -k2 -r -h | column -t >> $grep_file
 
 	# echo_request "TOTAL COMPACTIONS IN LAST DAY"
-	# egrep -ciR '$today.*Compacted' ./ --include={system,debug}* | sort -k 1 >> $grep_file
+	# egrep -ciR '$today.*Compacted' ./ --include={system,debug}\* | sort -k 1 >> $grep_file
 
 	# shows the number of compactions by table
 	# 34113 [ disk3 c_data srm ts_sample-a35ac480045811ebab44a71fdbae4c86
@@ -135,25 +135,25 @@ function greps() {
 
 	echo_request "RATE LIMITER APPLIED"
 	echo "Usually means too many operations, check concurrent reads/writes in c*.yaml" >> $grep_file
-	egrep -R "RateLimiter.*currently applied" ./ --include={system,debug}* >> $grep_file
+	egrep -R "RateLimiter.*currently applied" ./ --include={system,debug}\* >> $grep_file
 
 	echo_request "GC - OVER 100ms - COUNT"
-	egrep -ciR 'gcinspector.*\d\d\dms' ./ --include={system,debug}* | awk -F':' '($2>0){print $1,$2,$3}' | sort -k 1 | awk -F: '{print $1,$2}' | sort -k2 -r -h | column -t >> $grep_file
+	egrep -ciR 'gcinspector.*\d\d\dms' ./ --include={system,debug}\* | awk -F':' '($2>0){print $1,$2,$3}' | sort -k 1 | awk -F: '{print $1,$2}' | sort -k2 -r -h | column -t >> $grep_file
 
 	echo_request "GC - OVER 100ms TODAY - COUNT"
-	egrep -ciR '$(date +%Y-%m-%d).*gcinspector.*\d\d\dms' ./ --include={system,debug}* | awk -F':' '($2>0){print $1,$2,$3}' | sort -k 1 | awk -F: '{print $1,$2}' | sort -k2 -r -h | column -t >> $grep_file
+	egrep -ciR '$(date +%Y-%m-%d).*gcinspector.*\d\d\dms' ./ --include={system,debug}\* | awk -F':' '($2>0){print $1,$2,$3}' | sort -k 1 | awk -F: '{print $1,$2}' | sort -k2 -r -h | column -t >> $grep_file
 
 	echo_request "GC - GREATER THAN 1s - COUNT"
-	egrep -ciR 'gcinspector.*\d\d\d\dms' ./ --include={system,debug}* | awk -F':' '($2>0){print $1,$2,$3}' | sort -k 1 >> $grep_file
+	egrep -ciR 'gcinspector.*\d\d\d\dms' ./ --include={system,debug}\* | awk -F':' '($2>0){print $1,$2,$3}' | sort -k 1 >> $grep_file
 
 	echo_request "GC - GREATER THAN 1s TODAY - COUNT"
-	egrep -ciR '$(date +%Y-%m-%d).*gcinspector.*\d\d\d\dms' ./ --include={system,debug}* | awk -F':' '($2>0){print $1,$2,$3}' | sort -k 1 >> $grep_file
+	egrep -ciR '$(date +%Y-%m-%d).*gcinspector.*\d\d\d\dms' ./ --include={system,debug}\* | awk -F':' '($2>0){print $1,$2,$3}' | sort -k 1 >> $grep_file
 
 	echo_request "GC GREATER THAN 1s AND BEFORE"
-	egrep -iR -B 5 'gcinspector.*\d\d\d\dms' ./ --include={system,debug}* >> $grep_file
+	egrep -iR -B 5 'gcinspector.*\d\d\d\dms' ./ --include={system,debug}\* >> $grep_file
 
 	echo_request "SLOW QUERIES" $slow_queries
-	egrep -iR 'select.*slow' ./ --include={system,debug}* >> $slow_queries
+	egrep -iR 'select.*slow' ./ --include={system,debug}\* >> $slow_queries
 
 	schema_file=$(find . -name schema | head -1)
 	if [ ! -z "$schema_file" ]
@@ -177,7 +177,7 @@ function greps() {
 	egrep -R '$today.*Compacted (.*).*]' ./ --include={debug,system}* | awk '$0 ~ /[0-9]{2,} sstables/{print $0}' >> $grep_file
 
 	# echo_request "ALERT CLASSES"
-	# egrep -R 'WARN|ERROR' --include={system,debug}* ./ | awk -F']' '{print $1}' | awk -F[ '{print $2}' | sed 's/[0-9:#]//g' | sort | uniq -c >> $grep_file
+	# egrep -R 'WARN|ERROR' --include={system,debug}\* ./ | awk -F']' '{print $1}' | awk -F[ '{print $2}' | sed 's/[0-9:#]//g' | sort | uniq -c >> $grep_file
 
 
 
@@ -202,27 +202,27 @@ function greps() {
 	fi
 
 	echo_request "PREPARED STATEMENTS DISCARDED"
-	egrep -Rc "prepared statements discarded" ./ --include={system,debug}* | egrep ":[1-9]" | awk -F: '{print $1,$2}' | sort -k2 -r -h | column -t >> $grep_file
+	egrep -Rc "prepared statements discarded" ./ --include={system,debug}\* | egrep ":[1-9]" | awk -F: '{print $1,$2}' | sort -k2 -r -h | column -t >> $grep_file
 
 	echo_request "AGGREGATION QUERY USED WITHOUT PARTITION KEY"
-	egrep -ciR 'Aggregation query used without partition key' ./ --include={system,debug}* | egrep ":[1-9]" | awk -F: '{print $1,$2}' | sort -k2 -r -h | column -t >> $grep_file
+	egrep -ciR 'Aggregation query used without partition key' ./ --include={system,debug}\* | egrep ":[1-9]" | awk -F: '{print $1,$2}' | sort -k2 -r -h | column -t >> $grep_file
 
 	echo_request "CHUNK CACHE ALLOCATION"
-	egrep -ciR "Maximum memory usage reached.*cannot allocate chunk of" ./ --include={system,debug}* | egrep ":[1-9]" | awk -F: '{print $1,$2}' | sort -k2 -r -h | column -t  >> $grep_file
+	egrep -ciR "Maximum memory usage reached.*cannot allocate chunk of" ./ --include={system,debug}\* | egrep ":[1-9]" | awk -F: '{print $1,$2}' | sort -k2 -r -h | column -t  >> $grep_file
 
 	echo_request "ERRORS" $error
-	egrep -R "ERROR" ./ --include={system,debug}* >> $error
+	egrep -R "ERROR" ./ --include={system,debug}\* >> $error
 
 	echo_request "WARN" $warn
-	egrep -R "WARN" ./ --include={system,debug}* >> $warn
+	egrep -R "WARN" ./ --include={system,debug}\* >> $warn
 
 	# echo_request "THREADS" $threads
 	# echo "All threads from system and debug logs" >> $threads
-	# egrep -R ".*" ./ --include={system,debug}* | awk -F'[' '{print $2}' | awk -F']' '{print $1}' | sed 's|:.*||g' | sed 's|[(#].*||g' | sed 's/Repair-Task.*/Repair-Task/g' | sort -k2 | uniq -c | sort -k1 -n -r >> $threads
+	# egrep -R ".*" ./ --include={system,debug}\* | awk -F'[' '{print $2}' | awk -F']' '{print $1}' | sed 's|:.*||g' | sed 's|[(#].*||g' | sed 's/Repair-Task.*/Repair-Task/g' | sort -k2 | uniq -c | sort -k1 -n -r >> $threads
 
 	echo_request "DROPPED" $drops
 	echo "All dropped messages (mutation, read, hint)" >> $drops
-	egrep -R "messages were dropped in last" ./ --include={system,debug}* >> $drops
+	egrep -R "messages were dropped in last" ./ --include={system,debug}\* >> $drops
 }
 
 function solr() {
@@ -237,74 +237,74 @@ function solr() {
 	echo "Solr greps" > $solr_file
 
 	echo_request "SOLR DELETES" $solr_file
-	egrep -iRc 'ttl.*scheduler.*expired' ./ --include={system,debug}* | egrep ":[1-9]" >> $solr_file
+	egrep -iRc 'ttl.*scheduler.*expired' ./ --include={system,debug}\* | egrep ":[1-9]" >> $solr_file
 
 	h=`egrep -iRh 'max_docs_per_batch' ./ --include=dse.yaml | head -1 | awk '{print $2}'`
 	echo_request "SOLR DELETES HITTING $h THRESHOLD" $solr_file
-	egrep -icR "ttl.*scheduler.*expired.*$h" ./ --include={system,debug}* | egrep ":[1-9]" >> $solr_file
+	egrep -icR "ttl.*scheduler.*expired.*$h" ./ --include={system,debug}\* | egrep ":[1-9]" >> $solr_file
 echo_request "SOLR AUTOCOMMIT" $solr_file
-	egrep -icR 'commitScheduler.*DocumentsWriter' ./ --include={system,debug}* | egrep ":[1-9]" >> $solr_file
+	egrep -icR 'commitScheduler.*DocumentsWriter' ./ --include={system,debug}\* | egrep ":[1-9]" >> $solr_file
 
 	echo_request "SOLR COMMITS BY CORE" $solr_file
-	egrep -iR 'AbstractSolrSecondaryIndex.*Executing soft commit' ./ --include={system,debug}* | awk '{print $1,$(NF)}' | sort | uniq -c >> $solr_file
+	egrep -iR 'AbstractSolrSecondaryIndex.*Executing soft commit' ./ --include={system,debug}\* | awk '{print $1,$(NF)}' | sort | uniq -c >> $solr_file
 
 	echo_request "COMMITSCHEDULER" $solr_file
 	egrep -Ri "index workpool.*Solrmetricseventlistener" ./ --include=debug.log | awk -F']' '{print $1}' | awk -F'Index' '{print $1}' | sort -h | uniq -c | sort -rh >> $solr_file
 
 	echo_request "SOLR FLUSHES" $solr_file
-	egrep -iR 'Index WorkPool.Lucene flush' ./ --include={system,debug}* | awk -F'[' '{print $2}' | awk '{print $1}' | sort | uniq -c >> $solr_file
+	egrep -iR 'Index WorkPool.Lucene flush' ./ --include={system,debug}\* | awk -F'[' '{print $2}' | awk '{print $1}' | sort | uniq -c >> $solr_file
 
 	echo_request "SOLR FLUSHES BY THREAD" $solr_file
-	egrep -iR 'SolrMetricsEventListener.*Lucene flush' ./ --include={system,debug}* | awk -F']' '{print $1}' | awk -F'[' '{print $2}' | sed 's/:.*//g' | sed 's/[0-9]*//g' | sed 's/\-/ /g'|  sort | uniq -c | sort >> $solr_file
+	egrep -iR 'SolrMetricsEventListener.*Lucene flush' ./ --include={system,debug}\* | awk -F']' '{print $1}' | awk -F'[' '{print $2}' | sed 's/:.*//g' | sed 's/[0-9]*//g' | sed 's/\-/ /g'|  sort | uniq -c | sort >> $solr_file
 
 	echo_request "SOLR FLUSH SIZE" $solr_file
 	echo "0 - 999kB" >> $solr_file
-	egrep -iR 'SolrMetricsEventListener.*Lucene flush' ./ --include={system,debug}* | awk -F'flushed and' '{print $2}' | awk '($1>=0.0 && $1<1){print $1,$2}' | wc -l >> $solr_file
+	egrep -iR 'SolrMetricsEventListener.*Lucene flush' ./ --include={system,debug}\* | awk -F'flushed and' '{print $2}' | awk '($1>=0.0 && $1<1){print $1,$2}' | wc -l >> $solr_file
 	echo "1MB - 9MB" >> $solr_file
-	egrep -iR 'SolrMetricsEventListener.*Lucene flush' ./ --include={system,debug}* | awk -F'flushed and' '{print $2}' | awk '($1>=1 && $1<10){print $1,$2}' | wc -l >> $solr_file
+	egrep -iR 'SolrMetricsEventListener.*Lucene flush' ./ --include={system,debug}\* | awk -F'flushed and' '{print $2}' | awk '($1>=1 && $1<10){print $1,$2}' | wc -l >> $solr_file
 	echo "10MB - 49MB" >> $solr_file
-	egrep -iR 'SolrMetricsEventListener.*Lucene flush' ./ --include={system,debug}* | awk -F'flushed and' '{print $2}' | awk '($1>=10 && $1<50){print $1,$2}' | wc -l >> $solr_file
+	egrep -iR 'SolrMetricsEventListener.*Lucene flush' ./ --include={system,debug}\* | awk -F'flushed and' '{print $2}' | awk '($1>=10 && $1<50){print $1,$2}' | wc -l >> $solr_file
 	echo "50MB - 249MB" >> $solr_file
-	egrep -iR 'SolrMetricsEventListener.*Lucene flush' ./ --include={system,debug}* | awk -F'flushed and' '{print $2}' | awk '($1>=50 && $1<250){print $1,$2}' | wc -l >> $solr_file
+	egrep -iR 'SolrMetricsEventListener.*Lucene flush' ./ --include={system,debug}\* | awk -F'flushed and' '{print $2}' | awk '($1>=50 && $1<250){print $1,$2}' | wc -l >> $solr_file
 	echo "250MB - 1G" >> $solr_file
-	egrep -iR 'SolrMetricsEventListener.*Lucene flush' ./ --include={system,debug}* | awk -F'flushed and' '{print $2}' | awk '($1>=250 && $1<=1000){print $1,$2}' | wc -l >> $solr_file
+	egrep -iR 'SolrMetricsEventListener.*Lucene flush' ./ --include={system,debug}\* | awk -F'flushed and' '{print $2}' | awk '($1>=250 && $1<=1000){print $1,$2}' | wc -l >> $solr_file
 	echo "1G plus" >> $solr_file
-	egrep -iR 'SolrMetricsEventListener.*Lucene flush' ./ --include={system,debug}* | awk -F'flushed and' '{print $2}' | awk '($1>=1000){print $1,$2}' | wc -l >> $solr_file
+	egrep -iR 'SolrMetricsEventListener.*Lucene flush' ./ --include={system,debug}\* | awk -F'flushed and' '{print $2}' | awk '($1>=1000){print $1,$2}' | wc -l >> $solr_file
 
 	echo_request "LARGEST 5 SOLR FLUSHES" $solr_file
-	egrep -iR 'SolrMetricsEventListener.*Lucene flush' ./ --include={system,debug}* | awk -F'flushed and' '{print $2}' | awk '{print $1,$2}' | sort -r | head -5 >> $solr_file
+	egrep -iR 'SolrMetricsEventListener.*Lucene flush' ./ --include={system,debug}\* | awk -F'flushed and' '{print $2}' | awk '{print $1,$2}' | sort -r | head -5 >> $solr_file
 
 	#flushing issues
 	echo_request "FLUSHING FAILURES" $solr_file
-	egrep -iR "Failure to flush may cause excessive growth of Cassandra commit log" ./ --include={system,debug}* >> $solr_file
+	egrep -iR "Failure to flush may cause excessive growth of Cassandra commit log" ./ --include={system,debug}\* >> $solr_file
 
 	echo_request "QUERY RESPONSE TIMEOUT" $solr_file
-	grep -R "Query response timeout of" ./ --include={system,debug}* >> $solr_file
+	grep -R "Query response timeout of" ./ --include={system,debug}\* >> $solr_file
 
 	echo_request "LUCENE MERGES" $solr_file
 	echo "total lucene merges" >> $solr_file
-	grep -ciR "Lucene merge" ./ --include={system,debug}* | egrep ":[1-9]" >> $solr_file
+	grep -ciR "Lucene merge" ./ --include={system,debug}\* | egrep ":[1-9]" >> $solr_file
 
 	echo >> $solr_file
 	echo "100ms - 249ms" >> $solr_file
-	grep -R "Lucene merge" ./ --include={system,debug}* | awk -F'took' '{print $2}' | awk '($1>=0.100 && $1<0.250){print $1}' | wc -l >> $solr_file
+	grep -R "Lucene merge" ./ --include={system,debug}\* | awk -F'took' '{print $2}' | awk '($1>=0.100 && $1<0.250){print $1}' | wc -l >> $solr_file
 
 	echo "250ms - 499ms" >> $solr_file
-	grep -R "Lucene merge" ./ --include={system,debug}* | awk -F'took' '{print $2}' | awk '($1>=0.250 && $1<0.500){print $1}' | wc -l >> $solr_file
+	grep -R "Lucene merge" ./ --include={system,debug}\* | awk -F'took' '{print $2}' | awk '($1>=0.250 && $1<0.500){print $1}' | wc -l >> $solr_file
 
 	echo "500ms - 999ms" >> $solr_file
-	grep -R "Lucene merge" ./ --include={system,debug}* | awk -F'took' '{print $2}' | awk '($1>=0.500 && $1<1){print $1}' | wc -l >> $solr_file
+	grep -R "Lucene merge" ./ --include={system,debug}\* | awk -F'took' '{print $2}' | awk '($1>=0.500 && $1<1){print $1}' | wc -l >> $solr_file
 
 	echo "1s plus" >> $solr_file
-	grep -R "Lucene merge" ./ --include={system,debug}* | awk -F'took' '{print $2}' | awk '($1>=1){print $1}' | wc -l >> $solr_file
+	grep -R "Lucene merge" ./ --include={system,debug}\* | awk -F'took' '{print $2}' | awk '($1>=1){print $1}' | wc -l >> $solr_file
 
 	# you see above there that NTR is kicking in.. glorified backpressure but not yet hitting backpressure just slowing down commit rate
 	echo_request "INCREASING SOFT COMMIT RATE - Increasing commit rate before backpressure actually kicks in" >> $solr_file
-	egrep -iR "Increasing soft commit max time" ./ --include={system,debug}* >> $solr_file
+	egrep -iR "Increasing soft commit max time" ./ --include={system,debug}\* >> $solr_file
 
 	# filter cache eviction
 	echo_request "FILTER CACHE EVICTION" $solr_file
-	egrep -iR "Evicting oldest entries" ./ --include={system,debug}* >> $solr_file
+	egrep -iR "Evicting oldest entries" ./ --include={system,debug}\* >> $solr_file
 
 	# filter cache loading issue
 	# In case Johnny mentioned , we don’t see fq getting used but
@@ -321,7 +321,7 @@ echo_request "SOLR AUTOCOMMIT" $solr_file
 	# minutes on large indexes. As a result all these queries time out.
 	echo >> $solr_file
 	echo "execute latency" >> $solr_file
-	grep -R "minutes because higher than" ./ --include={system,debug}* >> $solr_file
+	grep -R "minutes because higher than" ./ --include={system,debug}\* >> $solr_file
 }
 
 function sixO() {
@@ -330,25 +330,25 @@ function sixO() {
 	echo "6.x Specific greps" > $sixo
 
 	echo_request "TOO MANY PENDING REQUESTS" $sixo
-	egrep -ciR 'Too many pending remote requests' ./ --include={system,debug}* >> $sixo
+	egrep -ciR 'Too many pending remote requests' ./ --include={system,debug}\* >> $sixo
 
 	echo_request "BACKPRESSURE REJECTION" $sixo
-	egrep -R 'Backpressure rejection while receiving' ./ --include={system,debug}* | cut -d '/' -f 1|uniq -c >> $sixo
+	egrep -R 'Backpressure rejection while receiving' ./ --include={system,debug}\* | cut -d '/' -f 1|uniq -c >> $sixo
 
 	echo_request "TIMED OUT ASYNC READS" $sixo
-	egrep -ciR 'Timed out async read from org.apache.cassandra.io.sstable.format.AsyncPartitionReader' ./ --include={system,debug}* >> $sixo
+	egrep -ciR 'Timed out async read from org.apache.cassandra.io.sstable.format.AsyncPartitionReader' ./ --include={system,debug}\* >> $sixo
 
 	echo_request "WRITES.WRITE ERRORS" $sixo
-	egrep -ciR 'Unexpected error during execution of request WRITES.WRITE' ./ --include={system,debug}* >> $sixo
+	egrep -ciR 'Unexpected error during execution of request WRITES.WRITE' ./ --include={system,debug}\* >> $sixo
 
 	echo_request "WRITES.WRITE BACKPRESSURE" $sixo
-	egrep -ciR 'backpressure rejection.*WRITES.WRITE' ./ --include={system,debug}* >> $sixo
+	egrep -ciR 'backpressure rejection.*WRITES.WRITE' ./ --include={system,debug}\* >> $sixo
 
 	echo_request "READS.READ BACKPRESSURE" $sixo
-	egrep -ciR 'backpressure rejection.*READS.READ' ./ --include={system,debug}* >> $sixo
+	egrep -ciR 'backpressure rejection.*READS.READ' ./ --include={system,debug}\* >> $sixo
 
 	echo_request "READS.READ ERRORS" $sixo
-	egrep -ciR 'Unexpected error during execution of request READS.READ' ./ --include={system,debug}* >> $sixo
+	egrep -ciR 'Unexpected error during execution of request READS.READ' ./ --include={system,debug}\* >> $sixo
 
 	echo_request 'THREADS WITH PENDING' $sixo
 	echo "threads with higher than 0 pending threads" >> $sixo
@@ -358,16 +358,16 @@ function sixO() {
 function tombstones() {
 	echo "Inside tombstones function"
 	echo_request "TOMBSTONE TABLES" $tombstone_file
-	egrep -iRh 'tombstone.*rows' ./ --include={system,debug}* | awk -F'FROM' '{print $2}' | awk -F'WHERE' '{print $1}' | sort | uniq -c | sort -nr >> $tombstone_file
+	egrep -iRh 'tombstone.*rows' ./ --include={system,debug}\* | awk -F'FROM' '{print $2}' | awk -F'WHERE' '{print $1}' | sort | uniq -c | sort -nr >> $tombstone_file
 
 	echo_request "TOMBSTONE MAX COUNT BY TABLE - max number of tombstones hit on a given query" $tombstone_file
-	egrep -iRh 'tombstone' ./ --include={system,debug}*  | grep -io 'scanned over.*\|rows and.*' | awk '{$1=$2="";print $0}' | sed 's/tombstone.*FROM//g' | awk '{print $1,$2}' | sort -nrk1 | sort -u -k2 >> $tombstone_file
+	egrep -iRh 'tombstone' ./ --include={system,debug}\*  | grep -io 'scanned over.*\|rows and.*' | awk '{$1=$2="";print $0}' | sed 's/tombstone.*FROM//g' | awk '{print $1,$2}' | sort -nrk1 | sort -u -k2 >> $tombstone_file
 
 	echo_request "TOMBSTONE ALERTS BY NODE - number of tombstone alerts, not max hit on a given query, but overall number of alerts in diag" $tombstone_file
-	egrep -ciR 'tombstone' ./ --include={system,debug}* | egrep ":[1-9]" | awk -F: '{print $1,$2}' | sort -k2 -r -h | column -t >> $tombstone_file
+	egrep -ciR 'tombstone' ./ --include={system,debug}\* | egrep ":[1-9]" | awk -F: '{print $1,$2}' | sort -k2 -r -h | column -t >> $tombstone_file
 
 	echo_request "TOMBSTONE QUERY ABORTS BY TABLE - max threshold hit, so query aborted" $tombstone_file
-	egrep -iRh 'tombstone' ./ --include={system,debug}* | grep "aborted" | awk '{for (I=1;I<NF;I++) if ($I == "FROM") print $(I+1)}' | sort | uniq -c >> $tombstone_file
+	egrep -iRh 'tombstone' ./ --include={system,debug}\* | grep "aborted" | awk '{for (I=1;I<NF;I++) if ($I == "FROM") print $(I+1)}' | sort | uniq -c >> $tombstone_file
 
 	echo_request "TOMBSTONE PARTITIONS - number of times partition hit" $tombstone_file
 	egrep -iR "tombstone.*for" ./ --include={system.log,debug.log} | awk -F'FROM' '{print $2}' | awk -F'LIMIT' '{print $1}' | sort | uniq -c >> $tombstone_file
@@ -424,9 +424,9 @@ function find_large_partitions() {
 	echo "Inside large_partitions function"
 	touch $large_partitions
 	echo_request "READING LARGE PARTITIONS" $large_partitions
-	egrep -iwR "Detected partition.*is greater than" --include={system,debug}* | cut -f1,7-25| awk '{if ($11~/GB$/) print $0}' > $large_partitions
+	egrep -iwR "Detected partition.*is greater than" --include={system,debug}\* | cut -f1,7-25| awk '{if ($11~/GB$/) print $0}' > $large_partitions
 	echo_request "WRITING LARGE PARTITIONS" $large_partitions
-	egrep -iwR "writing large partition" --include={system,debug}* | cut -f1,7-25| awk '{if ($11~/GB$/) print $0}' > $large_partitions
+	egrep -iwR "writing large partition" --include={system,debug}\* | cut -f1,7-25| awk '{if ($11~/GB$/) print $0}' > $large_partitions
 }
 
 function iostat() {

@@ -7,18 +7,21 @@ usage() {
     echo "Usage: $0 [-s] [-p] [-h] <Path to Opscenter diag>"
     echo "  -s   solr data"
     echo "  -p   GC per node"
+    echo "  -g   greps script"
     # TODO: Reset -r option to erase existing parsed data if you want to re-run with different options
     echo "  -h   show this help"
     exit 1
   fi
 }
 
-while getopts "sph" option; do
+while getopts "spgh" option; do
   case "${option}" in
     s) echo "Solr parsing requested"
        solrparse=1 ;;
     p) echo "Node per node parsing"
        pernode=1  ;;
+    g) echo "Greps requested"
+       slgreps=1  ;;
     h) echo "Showing help"
        usage ;;
   esac
@@ -146,7 +149,7 @@ if [[ -f $grepsl ]]; then
   $grepsl -l "$opscdiag" &
   wait
 else
-  echo ERROR: Grep script not found. Skipping...
+echo ERROR: Grep script not found. Skipping...
 fi
 }
 
