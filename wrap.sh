@@ -4,7 +4,7 @@ debug=0
 
 usage() {
   if [ $# -ne 1 ]; then
-    echo "Usage: $0 [-s] [-p] [-h] <Path to Opscenter diag>"
+    echo "Usage: $0 [-s] [-p] [-g] [-h] <Path to Opscenter diag>"
     echo "  -s   solr data"
     echo "  -p   GC per node"
     echo "  -g   greps script"
@@ -137,7 +137,13 @@ wait
 }
 
 slgrep() {
-if [[ -f $grepsl ]]; then
+if [[ ! -d "$opscdiag"/slg ]]; then
+	echo "Creating slg directory"
+	pwd
+	mkdir "$opscdiag"/slg
+fi
+
+if [[ -f $grepsl && $slgreps == 1 ]]; then
   echo ; echo "Running SL greps"
   $grepsl -c "$opscdiag" &
   $grepsl -g "$opscdiag" &
@@ -149,7 +155,7 @@ if [[ -f $grepsl ]]; then
   $grepsl -l "$opscdiag" &
   wait
 else
-echo ERROR: Grep script not found. Skipping...
+  echo "ERROR: Grep script not found. Skipping..."
 fi
 }
 
@@ -174,7 +180,7 @@ cat >> ./wrapper/left_frame.htm << EOF
      <b>Nibbler</b><br>
 EOF
 
-for i in $(ls ./Nibbler | egrep -v '[1-3]')
+for i in $(ls ./Nibbler | grep -E -v '[1-3]')
 do
   linkname
 	printf '\t\t\t<a href="../Nibbler/%s" target = "center">%s</a><br>\n' $i $link >> ./wrapper/left_frame.htm
@@ -202,11 +208,11 @@ cat >> ./wrapper/left_frame.htm << EOF
     <b>Greps</b><br>
 EOF
 
-for i in $(ls ./Nibbler | egrep '[1-3]')
+for i in $(ls ./slg | grep -E '[1-3]')
 do
   # echo $i
   linkname
-	printf '\t\t\t<a href="../Nibbler/%s" target = "center">%s</a><br>\n' $i $link >> ./wrapper/left_frame.htm
+	printf '\t\t\t<a href="../slg/%s" target = "center">%s</a><br>\n' $i $link >> ./wrapper/left_frame.htm
 done
 }
 
