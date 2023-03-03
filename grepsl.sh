@@ -29,6 +29,10 @@ opscdiag=$2
 
 #echo SL diag path "$opscdiag"
 
+function logs() {
+	sysdbgls=$(find $opscdiag -name 'system.*' -o -name 'debug.*' | grep -v zip)
+}
+
 function echo_request() {
 	if [ -z $2 ]
 	then
