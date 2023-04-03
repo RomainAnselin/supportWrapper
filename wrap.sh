@@ -268,6 +268,10 @@ elif [[ -d $(find "$opscdiag" -mindepth 2 -maxdepth 2 -name 'nodes' -type d) ]];
 elif [[ -d $(find "$opscdiag" -mindepth 1 -maxdepth 1 -name 'nodes' -type d) ]]; then
   # Directly in the directory containing the nodes folder. Setting subdiag as per the current diag.
   subdiag="$opscdiag"
+elif [[ -d $(find "$opscdiag" -mindepth 1 -maxdepth 1 -name '*artifacts*' -type d | head -1) ]]; then
+  # Directly in the directory containing artifacts (Services ds-collector)
+  echo "Detected services collector. Let's make a prayer together"
+  subdiag="$opscdiag"
 else
   echo "Cannot find the nodes folder. Exiting..."
   exit 1
