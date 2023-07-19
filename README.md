@@ -4,7 +4,6 @@ Getting started
 - sperf will fail to run on version 0.5.x - please update to a more recent version (tested against 0.6.5 and 0.6.6)
 
 # TO DO:
-- Test vs OSS diag collector
 - Text wrapping makes it hard to read but cannot be solved in current HTML frames. Refactor to HTML5 may be necessary
 - Set nibbler in silent mode (current view help see parsing issues) - to be discussed with Mike/Chun?
 
@@ -41,16 +40,31 @@ In `wrap.conf`, change the following variables to fit your environment.
 All of them are self explanatory:
 Path to java for Nibbler, path to Python 3 for sperf (optional if using sperf binaries), location sperf and nibbler tools
 Also define your favorite web browser (firefox, chrome, edge...)
+Added DV + Sperf
 
 ```
-# WARNING: If your path contains spaces/brackets, put the variable in double quotes.
+# WARNING: If your path contains spaces/brackets (ie: Windows), put the variable in double quotes.
 # ie: nibblerpath="/mnt/c/Users/My User/Nibbler.jar"
 # browser="/mnt/c/Program Files (x86)/Microsoft/Edge/Application/msedge.exe"
 browser=firefox
-javapath=/usr/lib/jvm/liberica-jdk8u265-full/jre/bin/java
-nibblerpath=~/tools/Nibbler.jar
-pythonpath=~/dev/virtualenvs/py3/bin/python
-sperfpath=~/tools/sperf/scripts/sperf
+# Nibbler env
+javapath=/usr/lib/jvm/jdk8u352-full/jre/bin/java
+nibblerpath=$HOME/dev/projects/Nibbler/out/artifacts/Nibbler_jar/Nibbler.jar
+# Sperf env
+pythonpath=$HOME/anaconda3/envs/ctool/bin/python
+sperfpath=$HOME/tools/sperf0617/sperf/scripts/sperf
+# Steve Lacerda greps embedded in supportWrapper
+grepsl=$HOME/dev/supportWrapper/grepsl.sh
+# Open the result in a separate window
+newwindow=1
+
+## Optional
+# DiagViewer env
+dvpy=$HOME/anaconda3/envs/jbdiag/bin/python3
+dvpath=$HOME/tools/diag-viewer
+# MonteCristo env
+jvmh=/usr/lib/jvm/jdk8u352-full
+mcpath=$HOME/tools/montecristo
 ```
 
 # How it works:
@@ -64,6 +78,18 @@ Run `swrap <path to opsc diag>`
 
 The script can be executed from one or two levels above the nodes folder of the diag. As I use ssdownloader, I prefer to use the "top" level of the diag, but both can be used.
 
+```wrap -h                                                   INT ✘ 
+Showing help
+Usage: /home/romain/dev/supportWrapper/wrap.sh [-s] [-p] [-g] [-d] [-m {tar.gz}] [-t {ticketid}] [-h] <Path to Opscenter diag>
+  -s            solr data
+  -p            GC per node
+  -g            greps script
+  -d            Diag Viewer db creation
+  -m {tar.gz}   MonteCristo Services diag execution
+  -t {ticketid} Ticket number. Necessary for Montecristo
+  -h   show this help
+```
+
 A folder called "wrapper" is created in the working dir (the diag folder choosen), which contains the sperf output as well as the html.
 
 Below a sample of the execution result.
@@ -74,8 +100,8 @@ $ ls -ltr "/home/romain/zd/customer/<zdid>/diagnostics (3)"
 total 12
 drwxrwxr-x 4 romain romain 4096 Oct 12 11:12 my-diagnostics-2020_10_12_09_04_56_UTC
 
-(py3) [2020-10-16 18:16:32] romain@romainDSE:~/dev/wrapperOneTool
-$ wrap.sh "/home/romain/zd/customer/<zdid>/diagnostics (3)"
+(py3) [2020-10-16 18:16:32] romain@romainDSE:~/dev/supportWrapper
+$ wrap.sh -s -p -g -t 1234 -m <compressed_diag.tar.gz> "clustername_diagnostics_date"
 Nibbler running
 
 Nibbler v3.0.2 is Started from CLI
@@ -129,4 +155,8 @@ Sperf Schema
 - For sperf solr, add an input parameter
 
 # 04/05/2022
-Parallelized sperf commands execution in the background
+- Parallelized sperf commands execution in the background
+- Test vs OSS diag collector
+
+# 19/07/2023
+- MonteCristo and DiagViewer added to conf file
