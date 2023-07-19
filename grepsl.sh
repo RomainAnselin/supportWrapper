@@ -204,7 +204,10 @@ function greps() {
 	grep -E -ciR "Maximum memory usage reached.*cannot allocate chunk of" ./ --include={system,debug}* | grep -E ":[1-9]" | awk -F: '{print $1,$2}' | sort -k2 -r -h | column -t  >> $grep_file
 
 	echo_request "ERRORS" $error
-	grep -E -R "ERROR" ./ --include={system,debug}* >> $error
+	find . -name "system.*" -o -name "debug.*" | while read fn; do
+		echo +++ $fn +++ >> $error
+		grep -E "ERROR" $fn >> $error
+	done
 
 	echo_request "WARN" $warn
 	grep -E -R "WARN" ./ --include={system,debug}* >> $warn

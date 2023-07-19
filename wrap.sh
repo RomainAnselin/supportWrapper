@@ -4,17 +4,20 @@ debug=0
 
 usage() {
   if [ $# -ne 1 ]; then
-    echo "Usage: $0 [-s] [-p] [-g] [-h] <Path to Opscenter diag>"
-    echo "  -s   solr data"
-    echo "  -p   GC per node"
-    echo "  -g   greps script"
-    # TODO: Reset -r option to erase existing parsed data if you want to re-run with different options
+    echo "Usage: $0 [-s] [-p] [-g] [-d] [-m {tar.gz}] [-t {ticketid}] [-h] <Path to Opscenter diag>"
+    echo "  -s            solr data"
+    echo "  -p            GC per node"
+    echo "  -g            greps script"
+    echo "  -d            Diag Viewer db creation"
+    echo "  -m {tar.gz}   MonteCristo Services diag execution"
+    echo "  -t {ticketid} Ticket number. Necessary for Montecristo"
+    # TODO (or not, I dont like scripting removal): Reset -r option to erase existing parsed data if you want to re-run with different options
     echo "  -h   show this help"
     exit 1
   fi
 }
 
-while getopts "spgh" option; do
+while getopts "spgdm:t:h" option; do
   case "${option}" in
     s) echo "Solr parsing requested"
        solrparse=1 ;;
@@ -22,6 +25,12 @@ while getopts "spgh" option; do
        pernode=1  ;;
     g) echo "Greps requested"
        slgreps=1  ;;
+    d) echo "Generating diag-viewer"
+       diagv=1  ;;
+    m) echo "Generating Montecristo"
+       diagtgz="$OPTARG"
+       montecris=1  ;;
+    t) ticketid="$OPTARG" ;;
     h) echo "Showing help"
        usage ;;
   esac
@@ -159,6 +168,33 @@ else
 fi
 }
 
+diagviewer() {
+  if [[ $diagv == 1 ]]; then
+    export PYTHONPATH=$PYTHONPATH:$jbd/src
+    $dvpy $dvpath/src/import $opscdiag
+    echo "Run the following command to review the content of the diagviewer or access the sqlite db" > ./wrapper/diag-viewer.txt
+    echo "cd $dvpath/src" >> ./wrapper/diag-viewer.txt
+    echo "python -mviewer $opscdiag/diagnostics.db" >> ./wrapper/diag-viewer.txt
+    # echo "DB is available under $opscdiag/diagnostics.db" >> ./wrapper/diag-viewer.txt
+  fi
+  }
+
+### TODO - MONTECRISTO
+montecristo(){
+  if [ -f "$opscdiag/../$diagtgz" ] && [ -n "$ticketid" ] && [ $montecris == 1 ]; then
+    export JAVA_HOME=$jvmh
+    mkdir "$opscdiag"/../diagMC
+    cp "$opscdiag/../$diagtgz" "$opscdiag"/../diagMC
+    pushd "$mcpath"
+    ./run.sh -d -c "$opscdiag"/../diagMC $ticketid | tee ./wrapper/mctmp.txt
+    mv -f ./wrapper/mctmp.txt ./wrapper/mc.txt
+    popd
+  else
+    echo "MonteCristo requires both diag tgz file (-m) and ticket id (-t)"
+    echo "Is the file "$opscdiag"/../"$diagtgz" available along ticket number?"
+  fi
+}
+
 # Time to build the content
 header() {
 cat > ./wrapper/left_frame.htm << EOF
@@ -202,6 +238,7 @@ do
 done
 }
 
+# SL greps
 grepspop() {
 cat >> ./wrapper/left_frame.htm << EOF
       <br>
@@ -214,6 +251,18 @@ do
   linkname
 	printf '\t\t\t<a href="../slg/%s" target = "center">%s</a><br>\n' $i $link >> ./wrapper/left_frame.htm
 done
+}
+
+# Diag link
+dvpop() {
+cat >> ./wrapper/left_frame.htm << EOF
+      <br>
+    <b>DiagV & MC</b><br>
+EOF
+
+printf '\t\t\t<a href="./%s" target = "center">%s</a><br>\n' ./diag-viewer.txt DVinfo >> ./wrapper/left_frame.htm
+echo "Come back later, I'm working. MonteCristo generation in progress. Data will be in http://127.0.0.1:1313" > ./wrapper/mc.txt
+printf '\t\t\t<a href="./%s" target = "center">%s</a><br>\n' ./mc.txt MC >> ./wrapper/left_frame.htm
 }
 
 footer() {
@@ -302,14 +351,17 @@ else
   nibblerrun
   sperfrun
   slgrep
+  diagviewer
   header
   nibblerpop
   sperfpop
   grepspop
+  dvpop
   footer
   # need to revisit tarball generation. Too many issues at the moment
   # tarball
   browseropen
+  montecristo
 fi
 
 if [[ "$debug" == "1" ]]; then 
