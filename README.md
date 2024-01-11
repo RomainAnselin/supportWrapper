@@ -1,4 +1,6 @@
 Getting started
+# Pre-requisites
+The tool uses python markdown converter. Make sure to add the module to your main python
 
 # Known issues:
 - sperf will fail to run on version 0.5.x - please update to a more recent version (tested against 0.6.5 and 0.6.6)
@@ -160,3 +162,6 @@ Sperf Schema
 
 # 19/07/2023
 - MonteCristo and DiagViewer added to conf file
+
+# 04/01/2024
+- Removed the web server startup from mc and added an md to html converter

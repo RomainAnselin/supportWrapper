@@ -58,7 +58,8 @@ fi
 prep() {
   mkdir "$opscdiag"/wrapper
   cp "$template"/index.html "$opscdiag"/wrapper/index.html
-  cp "$template"/datastax.png "$opscdiag"/wrapper/datastax.png
+  #cp "$template"/datastax.png "$opscdiag"/wrapper/datastax.png
+  cp "$template"/ds.svg "$opscdiag"/wrapper/ds.svg
 }
 
 linkname() {
@@ -179,19 +180,27 @@ diagviewer() {
   fi
   }
 
-### TODO - MONTECRISTO
 montecristo(){
   if [ -f "$opscdiag/../$diagtgz" ] && [ -n "$ticketid" ] && [ $montecris == 1 ]; then
     export JAVA_HOME=$jvmh
-    mkdir "$opscdiag"/../diagMC
-    cp "$opscdiag/../$diagtgz" "$opscdiag"/../diagMC
+    mkdir "$opscdiag"/../diagMC-$ticketid
+    cp "$opscdiag/../$diagtgz" "$opscdiag"/../diagMC-$ticketid
     pushd "$mcpath"
-    ./run.sh -d -c "$opscdiag"/../diagMC $ticketid | tee ./wrapper/mctmp.txt
-    mv -f ./wrapper/mctmp.txt ./wrapper/mc.txt
+    #pushd "$opscdiag"/../diagMC-$ticketid
+    $mcpath/run.sh -d -s -c "$opscdiag"/../diagMC-$ticketid $ticketid | tee ./mctmp.txt
+    mv -f ./mctmp.txt "$opscdiag"/wrapper/mc.txt
     popd
   else
     echo "MonteCristo requires both diag tgz file (-m) and ticket id (-t)"
     echo "Is the file "$opscdiag"/../"$diagtgz" available along ticket number?"
+  fi
+}
+
+converter(){
+  if [ -f $HOME/ds-discovery/$ticketid/reports/montecristo/content/exporter.md ]; then
+    python "$template"/md2html.py $HOME/ds-discovery/$ticketid/reports/montecristo/content/exporter.md "$opscdiag"/wrapper/mc.html
+  else
+    echo ERROR: MonteCristo failed to generate the summary exporter.md, review above for specific issues on its execution
   fi
 }
 
@@ -206,7 +215,7 @@ cat > ./wrapper/left_frame.htm << EOF
    </head>
 
    <body>
-     <img src="./datastax.png" alt="DataStax"><br><br>
+     <img src="./ds.svg" alt="DataStax"><br>
 EOF
 }
 
@@ -260,9 +269,9 @@ cat >> ./wrapper/left_frame.htm << EOF
     <b>DiagV & MC</b><br>
 EOF
 
-printf '\t\t\t<a href="./%s" target = "center">%s</a><br>\n' ./diag-viewer.txt DVinfo >> ./wrapper/left_frame.htm
-echo "Come back later, I'm working. MonteCristo generation in progress. Data will be in http://127.0.0.1:1313" > ./wrapper/mc.txt
-printf '\t\t\t<a href="./%s" target = "center">%s</a><br>\n' ./mc.txt MC >> ./wrapper/left_frame.htm
+  printf '\t\t\t<a href="./%s" target = "center">%s</a><br>\n' diag-viewer.txt DVinfo >> ./wrapper/left_frame.htm
+  echo "Come back later, I'm working. MonteCristo generation in progress. Data will be in http://127.0.0.1:1313" > ./wrapper/mc.txt
+  printf '\t\t\t<a href="./%s" target = "center">%s</a><br>\n' mc.html MC >> ./wrapper/left_frame.htm
 }
 
 footer() {
@@ -362,6 +371,7 @@ else
   # tarball
   browseropen
   montecristo
+  converter
 fi
 
 if [[ "$debug" == "1" ]]; then 
