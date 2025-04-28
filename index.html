@@ -1,17 +1,33 @@
 <!DOCTYPE html>
 <html>
+<head>
+    <title>DSE diags wrapper</title>
+    <style>
+        /* Style for the left frame */
+        .left-frame {
+            width: 7%;
+            height: 100%;
+            border: none;
+            position: absolute;
+            left: 0;
+            top: 0;
+        }
+      
+        /* Style for the center frame */
+        .center-frame {
+            width: 93%;
+            height: 100%;
+            border: none;
+            position: absolute;
+            left: 7%;
+            top: 0;
+        }
+    </style>
+</head>
 
-   <head>
-      <title>DSE diags wrapper</title>
-   </head>
-
-   <frameset cols = "7%,93%">
-      <frame name = "left" src = "./left_frame.htm" />
-      <frame name = "center" src = "./sperf1general.txt" />
-
-      <noframes>
-         <body>Your browser does not support frames.</body>
-      </noframes>
-   </frameset>
+<body>
+    <iframe class="left-frame" src="./left_frame.htm"></iframe>
+    <iframe class="center-frame" name="center" src="./sperf1general.txt"></iframe>
+</body>
 
 </html>
