@@ -4,20 +4,21 @@ debug=0
 
 usage() {
   if [ $# -ne 1 ]; then
-    echo "Usage: $0 [-s] [-p] [-g] [-d] [-m {tar.gz}] [-t {ticketid}] [-h] <Path to Opscenter diag>"
+    echo "Usage: $0 [-s] [-p] [-g] [-d] [-w] [-m {tar.gz}] [-t {ticketid}] [-h] <Path to Opscenter diag>"
     echo "  -s            solr data"
     echo "  -p            GC per node"
     echo "  -g            greps script"
     echo "  -d            Diag Viewer db creation"
     echo "  -m {tar.gz}   MonteCristo Services diag execution"
     echo "  -t {ticketid} Ticket number. Necessary for Montecristo"
+    echo "  -w            Do not wrap Nibbler output"
     # TODO (or not, I dont like scripting removal): Reset -r option to erase existing parsed data if you want to re-run with different options
     echo "  -h   show this help"
     exit 1
   fi
 }
 
-while getopts "spgdm:t:h" option; do
+while getopts "spgdmw:t:h" option; do
   case "${option}" in
     s) echo "Solr parsing requested"
        solrparse=1 ;;
@@ -31,6 +32,8 @@ while getopts "spgdm:t:h" option; do
        diagtgz="$OPTARG"
        montecris=1  ;;
     t) ticketid="$OPTARG" ;;
+    w) echo "Do not wrap Nibbler output selected"
+       nowrap=1  ;;
     h) echo "Showing help"
        usage ;;
   esac
@@ -63,14 +66,14 @@ prep() {
 }
 
 linkname() {
-  if [[ "$i" == "Cluster_Configuration_Summary.out" ]]; then link=Summary
-  elif [[ "$i" == "Node_Configuration_Files_Info.out" ]]; then link=Conf
-  elif [[ "$i" == "Node_Info.out" ]]; then link=Info
-  elif [[ "$i" == "Node_Resource_Usage_Info.out" ]]; then link=Resource
-  elif [[ "$i" == "Node_Status.out" ]]; then link=Status
-  elif [[ "$i" == "System_Log_Event_Info.out" ]]; then link=SystemLog
-  elif [[ "$i" == "Table_Statistics.out" ]]; then link=TableStats
-  elif [[ "$i" == "Thread_Pool_Statistics.out" ]]; then link=ThreadPool
+  if [[ "$i" == "Cluster_Configuration_Summary" ]]; then link=Summary
+  elif [[ "$i" == "Node_Configuration_Files_Info" ]]; then link=Conf
+  elif [[ "$i" == "Node_Info" ]]; then link=Info
+  elif [[ "$i" == "Node_Resource_Usage_Info" ]]; then link=Resource
+  elif [[ "$i" == "Node_Status" ]]; then link=Status
+  elif [[ "$i" == "System_Log_Event_Info" ]]; then link=SystemLog
+  elif [[ "$i" == "Table_Statistics" ]]; then link=TableStats
+  elif [[ "$i" == "Thread_Pool_Statistics" ]]; then link=ThreadPool
   elif [[ "$i" == "sperf2gc.txt" ]]; then link=GC
   elif [[ "$i" == "sperf1general.txt" ]]; then link=General
   elif [[ "$i" == "sperf3statuslog.txt" ]]; then link=StatusLogger
@@ -221,15 +224,44 @@ EOF
 
 # Populate the frame for nibbler files
 nibblerpop() {
+for i in $(ls ./Nibbler/*.out | grep -E -v '[1-3]')
+do
+  cat > ${i%.*}.htm << EOF
+<html>
+<head>
+    <style>
+        body {
+            white-space: pre; /* Prevent text wrapping */
+            font-family: monospace; /* Use a monospaced font for better readability */
+        }
+    </style>
+</head>
+<body>
+EOF
+  cat ${i%.*}.out >> ${i%.*}.htm
+  cat >> ${i%.*}.htm << EOF
+</body>
+</html>
+EOF
+done
+
 cat >> ./wrapper/left_frame.htm << EOF
      <b>Nibbler</b><br>
 EOF
 
-for i in $(ls ./Nibbler | grep -E -v '[1-3]')
-do
-  linkname
-	printf '\t\t\t<a href="../Nibbler/%s" target = "center">%s</a><br>\n' $i $link >> ./wrapper/left_frame.htm
-done
+if [[ $nowrap == 1 ]]; then
+    for i in $(ls ./Nibbler/*.htm | xargs -n 1 basename | sed 's/.htm$//')
+    do
+      linkname
+      printf '\t\t\t<a href="../Nibbler/%s" target = "center">%s</a><br>\n' ${i%.*}.htm $link >> ./wrapper/left_frame.htm
+    done
+else
+    for i in $(ls ./Nibbler/*.out | xargs -n 1 basename | sed 's/.out$//')
+    do
+      linkname
+      printf '\t\t\t<a href="../Nibbler/%s" target = "center">%s</a><br>\n' ${i%.*}.out $link >> ./wrapper/left_frame.htm
+    done
+fi
 }
 
 # Populate the frame for sperf files
