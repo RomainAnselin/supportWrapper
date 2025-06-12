@@ -18,7 +18,7 @@ usage() {
   fi
 }
 
-while getopts "spgdmw:t:h" option; do
+while getopts "spgdm:t:h" option; do
   case "${option}" in
     s) echo "Solr parsing requested"
        solrparse=1 ;;
@@ -32,8 +32,6 @@ while getopts "spgdmw:t:h" option; do
        diagtgz="$OPTARG"
        montecris=1  ;;
     t) ticketid="$OPTARG" ;;
-    w) echo "Do not wrap Nibbler output selected"
-       nowrap=1  ;;
     h) echo "Showing help"
        usage ;;
   esac
@@ -249,19 +247,11 @@ cat >> ./wrapper/left_frame.htm << EOF
      <b>Nibbler</b><br>
 EOF
 
-if [[ $nowrap == 1 ]]; then
-    for i in $(ls ./Nibbler/*.htm | xargs -n 1 basename | sed 's/.htm$//')
-    do
-      linkname
-      printf '\t\t\t<a href="../Nibbler/%s" target = "center">%s</a><br>\n' ${i%.*}.htm $link >> ./wrapper/left_frame.htm
-    done
-else
-    for i in $(ls ./Nibbler/*.out | xargs -n 1 basename | sed 's/.out$//')
-    do
-      linkname
-      printf '\t\t\t<a href="../Nibbler/%s" target = "center">%s</a><br>\n' ${i%.*}.out $link >> ./wrapper/left_frame.htm
-    done
-fi
+  for i in $(ls ./Nibbler/*.out | xargs -n 1 basename | sed 's/.out$//')
+  do
+    linkname
+    printf '\t\t\t<a href="../Nibbler/%s" target = "center">%s</a><br>\n' ${i%.*}.out $link >> ./wrapper/left_frame.htm
+  done
 }
 
 # Populate the frame for sperf files
